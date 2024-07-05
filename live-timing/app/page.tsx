@@ -1,10 +1,17 @@
 "use client";
 
-import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import React, { Suspense, useEffect, useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useState, useEffect } from "react";
 import useWebSocket from "react-use-websocket";
-import SkeletonCard from "./loading";
-import { Separator } from "@/components/ui/separator";
 
 interface RaceData {
   timestamp: number;
@@ -20,9 +27,9 @@ const CarreraData: React.FC = () => {
     onOpen: () => console.log("Connected to WebSocket"),
     onMessage: (event) => {
       const newData: RaceData = JSON.parse(event.data);
-      setRaceData((prevData) => {
+      setRaceData((prevData: any) => {
         const existingIndex = prevData.findIndex(
-          (data) => data.car_id === newData.car_id
+          (data: any) => data.car_id === newData.car_id
         );
 
         if (existingIndex !== -1) {
@@ -47,38 +54,37 @@ const CarreraData: React.FC = () => {
   }, [lastMessage]);
 
   return (
-    <div className="flex flex-col items-center justify-center gap-10">
-      <h1 className="font-bold text-3xl">
-        Live Daten der Carrera Bahn
-      </h1>
-    <Separator className="w-2/3"/>
-    <div className="w-2/3 shadow-lg">
-      <Table >
-        <TableHeader>
-          <TableRow >
-            <TableHead className="w-[100px]">Car</TableHead>
-            <TableHead className="w-[100px]">Position</TableHead>
-            <TableHead className="w-[100px]">Runden Zeit</TableHead>
-            <TableHead className="w-[100px]">Schnellste Runde</TableHead>
-            <TableHead className="w-[100px]">Letzte Runde</TableHead>
-            <TableHead className="w-[100px]">Runden</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {raceData.map((car) => (
-            <TableRow key={car.car_id}>
-              <TableCell className="font-medium">{car.car_id}</TableCell>
-              <TableCell>{car.position}</TableCell>
-              <TableCell>{car.timestamp}</TableCell>
-              <TableCell>{car.speed}</TableCell>
-              <TableCell>{car.speed}</TableCell>
-              <TableCell>{car.speed}</TableCell>
+    <div className="flex flex-col items-center  font-extrabold text-3xl   gap-10">
+      <div className="">
+        <h1>Live Daten</h1>
+      </div>
+      <div className="w-full lg:w-2/3">
+        <Table>
+          <TableCaption>Live Daten aus dem Rennen </TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[100px]">Car</TableHead>
+              <TableHead className="w-[100px]">Position</TableHead>
+              <TableHead className="w-[100px]">Letzte Runde</TableHead>
+              <TableHead className="w-[100px]">Schnellste Runde</TableHead>
+              <TableHead className="w-[100px]">Runden</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {raceData.map((car) => (
+              <TableRow key={car.car_id}>
+                <TableCell className="font-medium">{car.car_id}</TableCell>
+                <TableCell>{car.position}</TableCell>
+                <TableCell>{car.timestamp}</TableCell>
+                <TableCell className="text-right">{car.speed}</TableCell>
+                <TableCell className="text-right">{car.speed}</TableCell>
+                <TableCell className="text-right">{car.speed}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
-  </div>
   );
 };
 
