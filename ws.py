@@ -19,7 +19,7 @@ async def simulate_race_data(websocket, path):
         # Send the data to the client
         await websocket.send(message)
         # Wait for a second before sending the next data
-        await asyncio.sleep(8)
+        await asyncio.sleep(3)
 
 
 async def main():
