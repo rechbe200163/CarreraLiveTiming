@@ -68,4 +68,4 @@ const CarreraData: React.FC = () => {
   );
 };
 
-CarreraData;
+export default CarreraData;
