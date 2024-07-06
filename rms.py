@@ -2,8 +2,14 @@ import errno
 import logging
 import select
 import time
-
+from flask import Flask, jsonify, render_template
+from flask_socketio import SocketIO, emit
 from carreralib import ControlUnit
+import eventlet
+import socketio
+
+sio = socketio.Server(cors_allowed_origins='*')
+app = socketio.WSGIApp(sio)
 
 def posgetter(driver):
     return (-driver.laps, driver.time)
@@ -64,7 +70,7 @@ class RMS(object):
         last = None
         while True:
             try:
-                self.update()
+
                 data = self.cu.poll()
                 if data == last:
                     continue
@@ -72,6 +78,7 @@ class RMS(object):
                     self.handle_status(data)
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
+                    sio.emit('update', self.update(), skip_sid=True)
                 else:
                     logging.warn("Unknown data from CU: " + data)
                 last = data
@@ -102,4 +109,21 @@ class RMS(object):
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
         print("Drivers: ", drivers)
+        return drivers
 
+rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))  # RMS-Instanz mit ControlUnit initialisieren
+
+@sio.event 
+def connect(sid, environ):
+    rms.reset()
+
+@sio.event
+def disconnect(sid):
+    print('disconnect ', sid)
+
+def start_rms():
+    rms.run()
+
+if __name__ == '__main__':
+    eventlet.spawn(start_rms)
+    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
