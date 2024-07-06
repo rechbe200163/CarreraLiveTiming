@@ -9,37 +9,52 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState, useEffect } from "react";
 import useWebSocket, { ReadyState } from "react-use-websocket";
+import React, { useState, useEffect } from "react";
 
 interface RaceData {
-  timestamp: number;
   car_id: number;
   position: number;
   last_lap_time: number;
   best_lap_time: number;
   laps: number;
 }
+
 const CarreraData: React.FC = () => {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
-
   const { lastMessage, readyState } = useWebSocket("ws://localhost:8765");
 
   useEffect(() => {
     if (lastMessage !== null) {
       const newData: RaceData = JSON.parse(lastMessage.data);
+      console.log(newData);
       setRaceData((prevData) => {
         // Update or add new data based on car_id or any unique identifier
-        return [
-          ...prevData.filter((data) => data.car_id !== newData.car_id),
-          newData,
-        ];
+        const existingIndex = prevData.findIndex(
+          (data) => data.car_id === newData.car_id
+        );
+        if (existingIndex !== -1) {
+          // Update existing data
+          prevData[existingIndex] = newData;
+          return [...prevData];
+        } else {
+          // Add new data
+          return [...prevData, newData];
+        }
       });
     }
   }, [lastMessage]);
 
-  return (
-    <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
+  useEffect(() => {
+    if (readyState === ReadyState.OPEN) {
+      console.log("WebSocket connection established.");
+    } else if (readyState === ReadyState.CLOSED) {
+      console.log("WebSocket connection closed.");
+    }
+  }, [readyState]);
+  
+  return(
+  <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
       <div>
         <h1>Live Daten</h1>
       </div>
@@ -57,11 +72,11 @@ const CarreraData: React.FC = () => {
           </TableHeader>
           <TableBody>
             {raceData.map((car) => (
-              <TableRow key={car.car_id}>
+              <TableRow key={ raceData.indexOf(car) }>
                 <TableCell className="font-medium">{car.car_id}</TableCell>
                 <TableCell>{car.position}</TableCell>
-                <TableCell>{car.last_lap_time.toFixed(2)}s</TableCell>
-                <TableCell>{car.best_lap_time.toFixed(2)}s</TableCell>
+                <TableCell>{car.last_lap_time}</TableCell>
+                <TableCell>{car.best_lap_time}</TableCell>
                 <TableCell>{car.laps}</TableCell>
               </TableRow>
             ))}
