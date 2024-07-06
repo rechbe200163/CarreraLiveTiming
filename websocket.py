@@ -4,102 +4,104 @@ import logging
 import websockets
 from carreralib import ControlUnit
 
-class RMSWebSocket:
+# Global variables
+drivers = []
+maxlaps = 0
+start = None
+cu = None
+status = None
 
-    def __init__(self, cu):
-        self.cu = cu
-        self.drivers = [self.Driver(num) for num in range(1, 9)]
-        self.maxlaps = 0
-        self.start = None
+class Driver:
+    def __init__(self, num):
+        self.num = num
+        self.time = None
+        self.laptime = None
+        self.bestlap = None
+        self.laps = 0
+        self.pits = 0
+        self.fuel = 0
+        self.pit = False
 
-    class Driver:
-        def __init__(self, num):
-            self.num = num
-            self.time = None
-            self.laptime = None
-            self.bestlap = None
-            self.laps = 0
-            self.pits = 0
-            self.fuel = 0
-            self.pit = False
+    def newlap(self, timestamp):
+        if self.time is not None:
+            self.laptime = timestamp - self.time
+            if self.bestlap is None or self.laptime < self.bestlap:
+                self.bestlap = self.laptime
+            self.laps += 1
+        self.time = timestamp
 
-        def newlap(self, timer):
-            if self.time is not None:
-                self.laptime = timer.timestamp - self.time
-                if self.bestlap is None or self.laptime < self.bestlap:
-                    self.bestlap = self.laptime
-                self.laps += 1
-            self.time = timer.timestamp
+def reset_drivers():
+    global drivers, maxlaps, start, status
+    drivers = [Driver(num) for num in range(1, 9)]
+    maxlaps = 0
+    start = None
+    status = cu.poll()
+    while not isinstance(status, ControlUnit.Status):
+        status = cu.poll()
+    cu.reset()
+    cu.clrpos()
 
-    async def run(self, websocket, path):
-        self.reset()
-        last = None
-        while True:
-            try:
-                data = self.cu.poll()
-                if data == last:
-                    continue
-                elif isinstance(data, ControlUnit.Status):
-                    self.handle_status(data)
-                elif isinstance(data, ControlUnit.Timer):
-                    self.handle_timer(data)
-                    await self.send_data(websocket)
-                last = data
-            except Exception as e:
-                logging.error(f"Error: {e}")
-                break
+def handle_status(status):
+    global drivers
+    for driver, fuel in zip(drivers, status.fuel):
+        driver.fuel = fuel
+    for driver, pit in zip(drivers, status.pit):
+        if pit and not driver.pit:
+            driver.pits += 1
+        driver.pit = pit
 
-    def reset(self):
-        self.drivers = [self.Driver(num) for num in range(1, 9)]
-        self.maxlaps = 0
-        self.start = None
-        status = self.cu.poll()
-        while not isinstance(status, ControlUnit.Status):
-            status = self.cu.poll()
-        self.status = status
-        self.cu.reset()
-        self.cu.clrpos()
+def handle_timer(timer):
+    global drivers, maxlaps, start
+    driver = drivers[timer.address]
+    driver.newlap(timer.timestamp)
+    if maxlaps < driver.laps:
+        maxlaps = driver.laps
+        cu.setlap(maxlaps % 250)
+    if start is None:
+        start = timer.timestamp
 
-    def handle_status(self, status):
-        for driver, fuel in zip(self.drivers, status.fuel):
-            driver.fuel = fuel
-        for driver, pit in zip(self.drivers, status.pit):
-            if pit and not driver.pit:
-                driver.pits += 1
-            driver.pit = pit
-        self.status = status
+async def send_data(websocket):
+    global drivers
+    data = {
+        "drivers": [
+            {
+                "num": driver.num,
+                "time": driver.time,
+                "laptime": driver.laptime,
+                "bestlap": driver.bestlap,
+                "laps": driver.laps,
+                "pits": driver.pits,
+                "fuel": driver.fuel
+            }
+            for driver in drivers if driver.time is not None
+        ]
+    }
+    print(json.dumps(data))
+    await websocket.send(json.dumps(data))
 
-    def handle_timer(self, timer):
-        driver = self.drivers[timer.address]
-        driver.newlap(timer)
-        if self.maxlaps < driver.laps:
-            self.maxlaps = driver.laps
-            self.cu.setlap(self.maxlaps % 250)
-        if self.start is None:
-            self.start = timer.timestamp
-
-    async def send_data(self, websocket):
-        data = {
-            "drivers": [
-                {
-                    "num": driver.num,
-                    "time": driver.time,
-                    "laptime": driver.laptime,
-                    "bestlap": driver.bestlap,
-                    "laps": driver.laps,
-                    "pits": driver.pits,
-                    "fuel": driver.fuel
-                }
-                for driver in self.drivers if driver.time is not None
-            ]
-        }
-        await websocket.send(json.dumps(data))
-
+async def run(websocket, path):
+    global status
+    reset_drivers()
+    last = None
+    while True:
+        try:
+            data = cu.poll()
+            if data == last:
+                continue
+            elif isinstance(data, ControlUnit.Status):
+                handle_status(data)
+            elif isinstance(data, ControlUnit.Timer):
+                handle_timer(data)
+                await send_data(websocket)
+            last = data
+        except Exception as e:
+            logging.error(f"Error: {e}")
+            break
 
 async def main():
+    global cu
     cu = ControlUnit('D2:B9:57:15:EE:AC')
-    rms_ws = RMSWebSocket(cu)
-    async with websockets.serve(rms_ws.run, "localhost", 8765):
+    async with websockets.serve(run, "localhost", 8765):
         await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
