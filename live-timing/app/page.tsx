@@ -16,52 +16,27 @@ interface RaceData {
   timestamp: number;
   car_id: number;
   position: number;
-  last_lap_time: number; // Assuming last lap time is part of the data
-  best_lap_time: number; // Assuming best lap time is part of the data
-  laps: number; // Assuming total laps is part of the data
+  last_lap_time: number;
+  best_lap_time: number;
+  laps: number;
 }
-
 const CarreraData: React.FC = () => {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
 
-  const { sendMessage, lastMessage, readyState } = useWebSocket("ws://localhost:8765", {
-    onOpen: () => console.log("WebSocket connection opened"),
-    shouldReconnect: (closeEvent) => true,
-    onMessage: (event) => {
-      console.log("Received message from WebSocket:", event.data);
-      const newData: RaceData = JSON.parse(event.data);
-      console.log("Parsed race data:", newData);
-
-      setRaceData((prevData) => {
-        const existingIndex = prevData.findIndex(
-          (data) => data.car_id === newData.car_id
-        );
-
-        if (existingIndex !== -1) {
-          const updatedData = [...prevData];
-          updatedData[existingIndex] = newData;
-          updatedData.sort((a, b) => a.position - b.position);
-          console.log("Updated race data:", updatedData);
-          return updatedData;
-        } else {
-          const updatedData = [...prevData, newData];
-          updatedData.sort((a, b) => a.position - b.position);
-          console.log("New race data:", updatedData);
-          return updatedData;
-        }
-      });
-    },
-    onError: (error) => console.error("WebSocket error:", error),
-    onClose: () => console.log("WebSocket connection closed"),
-  });
+  const { lastMessage, readyState } = useWebSocket("ws://localhost:8765");
 
   useEffect(() => {
-    console.log("WebSocket ready state:", readyState);
-    if (!lastMessage) {
-      console.log("No last message, resetting race data");
-      setRaceData([]);
+    if (lastMessage !== null) {
+      const newData: RaceData = JSON.parse(lastMessage.data);
+      setRaceData((prevData) => {
+        // Update or add new data based on car_id or any unique identifier
+        return [
+          ...prevData.filter((data) => data.car_id !== newData.car_id),
+          newData,
+        ];
+      });
     }
-  }, [lastMessage, readyState]);
+  }, [lastMessage]);
 
   return (
     <div className="flex flex-col items-center font-extrabold text-3xl gap-10">

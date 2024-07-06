@@ -11,24 +11,24 @@ start = None
 cu = None
 status = None
 
+
 class Driver:
     def __init__(self, num):
-        self.num = num
-        self.time = None
-        self.laptime = None
-        self.bestlap = None
+        self.position = 0
+        self.timestamp = 0
+        self.car_id = num
+        self.last_lap_time = 0
+        self.best_lap_time = 0
         self.laps = 0
-        self.pits = 0
-        self.fuel = 0
-        self.pit = False
 
     def newlap(self, timestamp):
-        if self.time is not None:
-            self.laptime = timestamp - self.time
-            if self.bestlap is None or self.laptime < self.bestlap:
-                self.bestlap = self.laptime
+        if self.timestamp is not None:
+            self.laptime = timestamp - self.timestamp
+            if self.best_lap_time is None or self.laptime < self.best_lap_time:
+                self.best_lap_time = self.laptime
             self.laps += 1
-        self.time = timestamp
+        self.timestamp = timestamp
+
 
 def reset_drivers():
     global drivers, maxlaps, start, status
@@ -41,6 +41,7 @@ def reset_drivers():
     cu.reset()
     cu.clrpos()
 
+
 def handle_status(status):
     global drivers
     for driver, fuel in zip(drivers, status.fuel):
@@ -49,6 +50,7 @@ def handle_status(status):
         if pit and not driver.pit:
             driver.pits += 1
         driver.pit = pit
+
 
 def handle_timer(timer):
     global drivers, maxlaps, start
@@ -60,24 +62,25 @@ def handle_timer(timer):
     if start is None:
         start = timer.timestamp
 
+
 async def send_data(websocket):
     global drivers
     data = {
         "drivers": [
             {
-                "num": driver.num,
-                "time": driver.time,
+                "position": driver.position,
+                "num": driver.car_id,
+                "timestamp": driver.timestamp,
                 "laptime": driver.laptime,
-                "bestlap": driver.bestlap,
+                "bestlap": driver.best_lap_time,
                 "laps": driver.laps,
-                "pits": driver.pits,
-                "fuel": driver.fuel
             }
-            for driver in drivers if driver.time is not None
+            for driver in drivers if driver.timestamp is not None
         ]
     }
     print(json.dumps(data))
     await websocket.send(json.dumps(data))
+
 
 async def run(websocket, path):
     global status
@@ -97,6 +100,7 @@ async def run(websocket, path):
         except Exception as e:
             logging.error(f"Error: {e}")
             break
+
 
 async def main():
     global cu
