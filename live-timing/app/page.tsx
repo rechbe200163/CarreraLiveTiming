@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   Table,
@@ -31,13 +31,10 @@ const CarreraData: React.FC = () => {
     socket.on("connect", () => {
       console.log("WebSocket connection established.");
       socket.emit("update");
+      console.log("Update event send");
     });
 
-    socket.on("sum", (result: number) => {
-      console.log("Received sum:", result);
-    });
-
-    socket.on("update", (newData: any) => {
+    socket.on("update", (newData: RaceData) => {
       console.log("Received update:", newData);
       setRaceData((prevData) => {
         const existingIndex = prevData.findIndex(
