@@ -1,8 +1,10 @@
-import threading
 import random
 import time
 import eventlet
 import socketio
+
+# Apply eventlet monkey patching
+eventlet.monkey_patch()
 
 # Define mock sio
 sio = socketio.Server(cors_allowed_origins='*')
@@ -42,8 +44,9 @@ class RaceSimulation:
                 driver.pits = random.randint(0, 5)
                 driver.fuel = random.uniform(0.0, 100.0)
                 driver.pit = random.choice([True, False])
-                sio.start_background_task(update)
-            time.sleep(random.uniform(0.5, 2.0))
+
+            sio.emit("update", self.update())
+            eventlet.sleep(random.uniform(0.5, 2.0))
 
     def stop(self):
         self.running = False
@@ -62,19 +65,11 @@ def disconnect(sid):
     print('Client disconnected:', sid)
 
 
-@sio.event
-def update(sid):
-    sio.emit("update", simulation.update(), room=sid)
-
-
 def start_simulation():
-    thread = threading.Thread(target=simulation.run)
-    thread.start()
-    return thread
+    eventlet.spawn(simulation.run)
 
 
 if __name__ == '__main__':
-    simulation_thread = start_simulation()
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+    start_simulation()
+    eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
     simulation.stop()
-    simulation_thread.join()
