@@ -1,12 +1,4 @@
 import threading
-import unittest
-from unittest.mock import MagicMock, patch
-import errno
-import logging
-import select
-from carreralib import ControlUnit
-import websockets
-import json
 import random
 import time
 import eventlet
@@ -50,8 +42,7 @@ class RaceSimulation:
                 driver.pits = random.randint(0, 5)
                 driver.fuel = random.uniform(0.0, 100.0)
                 driver.pit = random.choice([True, False])
-
-            sio.start_background_task(update(self.update()))
+                sio.start_background_task(update)
             time.sleep(random.uniform(0.5, 2.0))
 
     def stop(self):
@@ -72,9 +63,8 @@ def disconnect(sid):
 
 
 @sio.event
-def update(data):
-    print(f"Data: {data}")
-    sio.emit("update", data, skip_sid=True)
+def update(sid):
+    sio.emit("update", simulation.update(), room=sid)
 
 
 def start_simulation():
