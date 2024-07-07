@@ -1,34 +1,90 @@
-import asyncio
+import threading
+import unittest
+from unittest.mock import MagicMock, patch
+import errno
+import logging
+import select
+from carreralib import ControlUnit
 import websockets
 import json
 import random
 import time
+import eventlet
+import socketio
+
+# Define mock sio
+sio = socketio.Server(cors_allowed_origins='*')
+app = socketio.WSGIApp(sio)
 
 
-async def simulate_race_data(websocket, path):
-    while True:
-        # Simulate race data
-        data = {
-            'position': random.randint(1, 3),
-            "timestamp": time.time(),
-            "car_id": random.randint(1, 3),
-            "position": random.randint(1, 3),
-            "last_lap_time": random.randint(1, 3),
-            "best_lap_time": random.randint(1, 3),
-            "laps": random.randint(1, 3),
-
-        }
-        # Convert the data to JSON
-        message = json.dumps(data)
-        # Send the data to the client
-        await websocket.send(message)
-        # Wait for a second before sending the next data
-        await asyncio.sleep(3)
+class Driver:
+    def __init__(self, num):
+        self.num = num
+        self.time = None
+        self.laptime = None
+        self.bestlap = None
+        self.laps = 0
+        self.pits = 0
+        self.fuel = 0
+        self.pit = False
 
 
-async def main():
-    async with websockets.serve(simulate_race_data, "localhost", 8765):
-        await asyncio.Future()
+class RaceSimulation:
+    def __init__(self, num_drivers):
+        self.drivers = [Driver(i) for i in range(num_drivers)]
+        self.running = False
+
+    def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
+        drivers = [driver.__dict__ for driver in self.drivers if driver.time]
+        return drivers
+
+    def run(self):
+        self.running = True
+        while self.running:
+            for driver in self.drivers:
+                driver.time = time.time()
+                driver.laptime = random.uniform(1.0, 2.0)
+                driver.bestlap = min(
+                    driver.bestlap or driver.laptime, driver.laptime)
+                driver.laps += 1
+                driver.pits = random.randint(0, 5)
+                driver.fuel = random.uniform(0.0, 100.0)
+                driver.pit = random.choice([True, False])
+
+            sio.start_background_task(update(self.update()))
+            time.sleep(random.uniform(0.5, 2.0))
+
+    def stop(self):
+        self.running = False
+
+
+simulation = RaceSimulation(num_drivers=5)
+
+
+@sio.event
+def connect(sid, environ):
+    print('Client connected:', sid)
+
+
+@sio.event
+def disconnect(sid):
+    print('Client disconnected:', sid)
+
+
+@sio.event
+def update(data):
+    print(f"Data: {data}")
+    sio.emit("update", data, skip_sid=True)
+
+
+def start_simulation():
+    thread = threading.Thread(target=simulation.run)
+    thread.start()
+    return thread
+
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    simulation_thread = start_simulation()
+    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+    simulation.stop()
+    simulation_thread.join()
