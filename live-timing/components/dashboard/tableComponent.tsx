@@ -9,14 +9,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { RaceData } from "@/lib/types";
-import { formatTime } from "@/lib/utils";
-import { getFastestLapCars } from "@/lib/utils";
+import RacingDataSkeleton from "./RacingDataSkeleton";
+import { useToast } from "@/components/ui/use-toast";
 import React, { useState, useEffect } from "react";
+import { getFastestLapCars } from "@/lib/utils";
+import { formatTime } from "@/lib/utils";
+import { RaceData } from "@/lib/types";
 import io from "socket.io-client";
+import clsx from "clsx";
 
 const TableComponent = () => {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [fastestLap, setFastestLap] = useState<number | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const socket = io("http://localhost:8765", {
@@ -30,8 +36,25 @@ const TableComponent = () => {
 
     socket.on("update", (newData: RaceData[]) => {
       console.log("Received update:", newData);
+      const processedData = getFastestLapCars(newData);
+      const newFastestLap = Math.min(
+        ...processedData.map((data) => data.bestlap)
+      );
 
-      setRaceData(getFastestLapCars(newData));
+      // Check if there is a new fastest lap
+      if (fastestLap === null || newFastestLap < fastestLap) {
+        setFastestLap(newFastestLap);
+        toast({
+          title: "Fastest Lap!",
+          description: `A new fastest lap has been set! ${formatTime(
+            newFastestLap
+          )}`,
+          variant: "fastest",
+        });
+      }
+
+      setRaceData(processedData);
+      setLoading(false);
     });
 
     socket.on("disconnect", () => {
@@ -41,14 +64,10 @@ const TableComponent = () => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [fastestLap]);
 
   return (
-    <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
-      <div className="flex flex-row-reverse p-5">
-        <h1>Live Daten</h1>
-        {/* <p>{raceTime.toFixed(1)}</p> */}
-      </div>
+    <>
       <div className="w-full lg:w-2/3 font-normal antialiased">
         <Table>
           <TableCaption>Live Daten aus dem Rennen</TableCaption>
@@ -61,31 +80,39 @@ const TableComponent = () => {
               <TableHead className="w-[100px]">Laps</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
-            {raceData.map((car) =>
-              car.has_fastest_lap ? (
-                <TableRow key={car.num}>
-                  {/* Use real position here but sort list in backend */}
-                  <TableCell>{raceData.indexOf(car) + 1}</TableCell>
-                  <TableCell className="bg-purple-400">{car.num}</TableCell>
-                  <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
-                  <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
-                  <TableCell>{car.laps}</TableCell>
-                </TableRow>
-              ) : (
-                <TableRow key={car.num}>
-                  <TableCell>{raceData.indexOf(car) + 1}</TableCell>
-                  <TableCell>{car.num}</TableCell>
-                  <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
-                  <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
-                  <TableCell>{car.laps}</TableCell>
-                </TableRow>
-              )
-            )}
-          </TableBody>
+          {loading ? (
+            <RacingDataSkeleton />
+          ) : (
+            <TableBody>
+              {raceData.map((car) =>
+                car.has_fastest_lap ? (
+                  <TableRow
+                    key={car.num}
+                    className={clsx({ "h-12 duration-1000": fastestLap })}
+                  >
+                    <TableCell>{raceData.indexOf(car) + 1}</TableCell>
+                    <TableCell className="bg-purple-400">
+                      {car.num + 1}
+                    </TableCell>
+                    <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
+                    <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
+                    <TableCell>{car.laps}</TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow key={car.num}>
+                    <TableCell>{raceData.indexOf(car) + 1}</TableCell>
+                    <TableCell>{car.num + 1}</TableCell>
+                    <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
+                    <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
+                    <TableCell>{car.laps}</TableCell>
+                  </TableRow>
+                )
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
-    </div>
+    </>
   );
 };
 
