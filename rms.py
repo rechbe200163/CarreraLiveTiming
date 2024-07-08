@@ -11,8 +11,10 @@ import socketio
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
+
 def posgetter(driver):
     return (-driver.laps, driver.time)
+
 
 def formattime(time, longfmt=False):
     if time is None:
@@ -26,6 +28,7 @@ def formattime(time, longfmt=False):
         return "%d:%02d.%03d" % (s // 60, s % 60, ms)
     else:
         return "%d:%02d:%02d.%03d" % (s // 3600, (s // 60) % 60, s % 60, ms)
+
 
 class RMS(object):
 
@@ -79,6 +82,7 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update(), skip_sid=True)
+                    eventlet.sleep()
                 else:
                     logging.warn("Unknown data from CU: " + data)
                 last = data
@@ -111,18 +115,24 @@ class RMS(object):
         print("Drivers: ", drivers)
         return drivers
 
-rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))  # RMS-Instanz mit ControlUnit initialisieren
 
-@sio.event 
+# RMS-Instanz mit ControlUnit initialisieren
+rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))
+
+
+@sio.event
 def connect(sid, environ):
     rms.reset()
+
 
 @sio.event
 def disconnect(sid):
     print('disconnect ', sid)
 
+
 def start_rms():
     rms.run()
+
 
 if __name__ == '__main__':
     eventlet.spawn(start_rms)
