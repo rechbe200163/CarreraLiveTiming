@@ -12,10 +12,9 @@ import {
 import RacingDataSkeleton from "./RacingDataSkeleton";
 import { useToast } from "@/components/ui/use-toast";
 import React, { useState, useEffect } from "react";
-import { getFastestLapCars } from "@/lib/utils";
+import { connectToSocket, getFastestLapCars } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
 import { RaceData } from "@/lib/types";
-import io from "socket.io-client";
 import clsx from "clsx";
 
 const TableComponent = () => {
@@ -25,9 +24,7 @@ const TableComponent = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    const socket = io("http://localhost:8765", {
-      transports: ["websocket", "polling"],
-    });
+    const socket = connectToSocket("http://localhost:8765");
 
     socket.on("connect", () => {
       console.log("WebSocket connection established.");
@@ -73,8 +70,8 @@ const TableComponent = () => {
           <TableCaption>Live Daten aus dem Rennen</TableCaption>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[100px]">Position</TableHead>
-              <TableHead className="w-[100px]">Car</TableHead>
+              <TableHead className="w-3">Position</TableHead>
+              <TableHead className="w-3">Car</TableHead>
               <TableHead className="w-[100px]">Last Lap</TableHead>
               <TableHead className="w-[100px]">Best Lap</TableHead>
               <TableHead className="w-[100px]">Laps</TableHead>
