@@ -2,6 +2,9 @@ import { type ClassValue, clsx } from "clsx";
 import { format } from "path";
 import { twMerge } from "tailwind-merge";
 import { RaceData } from "./types";
+import { connect } from "http2";
+import { url } from "inspector";
+import { io } from "socket.io-client";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -17,7 +20,7 @@ export function formatTime(time: number, type: string = "racetime") {
   }
 }
 
-function formatRaceTime(time: number) {
+function formatRaceTime(time: number): string {
   const seconds = ((time % 60000) / 1000).toFixed(3);
   return `${parseInt(seconds) < 10 ? "0" : ""}${seconds}`;
 }
@@ -34,4 +37,10 @@ export function getFastestLapCars(raceData: RaceData[]) {
     ...data,
     has_fastest_lap: data.bestlap === fastestLapTime,
   }));
+}
+
+export function connectToSocket(url: string) {
+  return io(url, {
+    transports: ["websocket", "polling"],
+  });
 }
