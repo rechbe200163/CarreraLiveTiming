@@ -21,6 +21,7 @@ class Driver:
         self.pits = 0
         self.fuel = 0
         self.pit = False
+        self.position = 0
 
 
 class RaceSimulation:
@@ -30,23 +31,25 @@ class RaceSimulation:
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
+        drivers.sort(key=lambda driver: driver['laps'])
         return drivers
 
     def run(self):
         self.running = True
         while self.running:
             for driver in self.drivers:
-                driver.time = time.time()
-                driver.laptime = random.uniform(1.0, 2.0)
-                driver.bestlap = min(
-                    driver.bestlap or driver.laptime, driver.laptime)
+                driver.time = int(time.time() * 1000)
+                driver.laptime = int(random.uniform(7.4, 11.0) * 1000)
+                driver.bestlap = min(driver.bestlap or driver.laptime, driver.laptime)
                 driver.laps += 1
                 driver.pits = random.randint(0, 5)
-                driver.fuel = random.uniform(0.0, 100.0)
-                driver.pit = random.choice([True, False])
+                driver.fuel = False
+                driver.pit = False
+                driver.position = random.randint(1, len(self.drivers))
 
             sio.emit("update", self.update())
-            eventlet.sleep(random.uniform(0.5, 2.0))
+            eventlet.sleep()
+            eventlet.sleep(random.uniform(7.4, 11.0))
 
     def stop(self):
         self.running = False
