@@ -1,21 +1,27 @@
-import InteractingComponent from "@/components/dashboard/ImteractingComponent";
-import TableComponent from "@/components/dashboard/tableComponent";
 import { Button } from "@/components/ui/button";
-import { Inter } from "next/font/google";
+import Link from "next/link";
+import React from "react";
 
-const CarreraData: React.FC = () => {
+const Home = () => {
   return (
-    <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
-      <div className="flex flex-row-reverse p-5">
-        <h1>Live Daten</h1>
+    <div className="flex flex-col items-center justify-center min-h-screen p-5 space-y-6 bg-gray-100">
+      <h1 className="text-4xl font-bold text-center">
+        Welcome to Carrera Live Timing
+      </h1>
+      <span className="text-lg text-center text-gray-600">
+        Choose your mode
+      </span>
+      <div className="flex flex-wrap justify-center gap-4">
+        <Button>
+          <Link href="live-timing/" passHref>
+            Race
+          </Link>
+        </Button>
+        <Button>Qualifying</Button>
+        <Button>Practice</Button>
       </div>
-      <div className="flex flex-row ">
-        <InteractingComponent action="start" />
-        <InteractingComponent action="stop" />
-      </div>
-      <TableComponent />
     </div>
   );
 };
 
-export default CarreraData;
+export default Home;
