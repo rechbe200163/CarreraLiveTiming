@@ -1,9 +1,7 @@
 import InteractingComponent from "@/components/dashboard/ImteractingComponent";
 import TableComponent from "@/components/dashboard/tableComponent";
 import Breadcrumbs from "@/components/helper/BreadCrumps";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { Button } from "@/components/ui/button";
-import { Inter } from "next/font/google";
+import prisma from "../../lib/prisma";
 
 const CarreraData = () => {
   return (
