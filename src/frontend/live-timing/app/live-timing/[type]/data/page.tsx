@@ -1,9 +1,12 @@
-import InteractingComponent from "@/components/dashboard/ImteractingComponent";
-import TableComponent from "@/components/dashboard/tableComponent";
-import Breadcrumbs from "@/components/helper/BreadCrumps";
-import prisma from "../../lib/prisma";
+import InteractingComponent from "@/app/ui/dashboard/ImteractingComponent";
+import TableComponent from "@/app/ui/dashboard/TableComponent";
+import Breadcrumbs from "@/app/ui/helper/BreadCrumps";
 
-const CarreraData = () => {
+export default async function LiveTimingData({
+  params,
+}: {
+  params: { type: string };
+}) {
   return (
     <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
       <Breadcrumbs
@@ -13,15 +16,13 @@ const CarreraData = () => {
         ]}
       />
       <div className="flex flex-row-reverse p-5">
-        <h1>Live Daten</h1>
+        <h1>Live Daten | {params.type.toLocaleUpperCase()}</h1>
       </div>
       <div className="flex flex-row ">
         <InteractingComponent action="start" />
         <InteractingComponent action="stop" />
       </div>
-      <TableComponent />
+      <TableComponent type={params.type} />
     </div>
   );
-};
-
-export default CarreraData;
+}

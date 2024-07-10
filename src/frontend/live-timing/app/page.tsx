@@ -13,12 +13,15 @@ const Home = () => {
       </span>
       <div className="flex flex-wrap justify-center gap-4">
         <Button>
-          <Link href="live-timing/" passHref>
-            Race
-          </Link>
+          <Link href={`/live-timing/race/data`}>Race</Link>
         </Button>
-        <Button>Qualifying</Button>
-        <Button>Practice</Button>
+        <Button>
+          {" "}
+          <Link href={`/live-timing/qualifying/data`}>Qualifying</Link>
+        </Button>
+        <Button>
+          <Link href={`/live-timing/practice/data`}>Practice</Link>
+        </Button>
       </div>
     </div>
   );

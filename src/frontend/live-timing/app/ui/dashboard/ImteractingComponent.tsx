@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
-import { Button } from "../ui/button";
 import { connectToSocket } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const InteractingComponent = ({ action }: { action: string }) => {
   const socket = connectToSocket("http://localhost:8765");
@@ -13,7 +13,6 @@ const InteractingComponent = ({ action }: { action: string }) => {
     if (action === "stop") {
       socket.emit("stop");
     }
-    
   };
 
   socket.on("start_success", (mes: string) => {

@@ -18,6 +18,7 @@
     "lucide-react": "^0.402.0",
     "mongodb": "^6.8.0",
     "next": "14.2.4",
+    "prisma": "^5.16.2",
     "react": "^18.3.1",
     "react-dom": "^18",
     "react-use-websocket": "^4.8.1",
@@ -32,7 +33,6 @@
     "eslint": "^8",
     "eslint-config-next": "14.2.4",
     "postcss": "^8",
-    "prisma": "^5.16.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }
