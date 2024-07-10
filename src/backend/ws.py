@@ -22,6 +22,7 @@ class Driver:
         self.fuel = 0
         self.pit = False
         self.position = 0
+        self.has_fastest_lap = False
 
 
 class RaceSimulation:
@@ -32,7 +33,10 @@ class RaceSimulation:
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
-        drivers.sort(key=lambda driver: driver['bestlap'])
+        fastest_lap = min(
+            driver.laptime for driver in self.drivers if driver.laptime)
+        for driver in self.drivers:
+            driver.has_fastest_lap = driver.laptime == fastest_lap
         return drivers
 
     def run(self):
@@ -49,9 +53,10 @@ class RaceSimulation:
                 driver.pit = False
                 driver.position = random.randint(1, len(self.drivers))
 
-            sio.emit("update", self.update())
-            eventlet.sleep()
-            eventlet.sleep(random.uniform(7.4, 11.0))
+                sio.emit("update", self.update())
+                print("emitted update")
+                eventlet.sleep()
+                eventlet.sleep(random.uniform(7.4, 11.0))
 
             if all(driver.laps >= self.max_laps for driver in self.drivers):
                 self.stop()
@@ -81,6 +86,7 @@ def qualifing():
 @sio.event
 def stop(sid):
     simulation.stop()
+    print("stopped session successfully")
     sio.emit("stop_success", "stopped session successfully", to=sid)
 
 
