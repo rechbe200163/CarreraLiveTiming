@@ -7,14 +7,19 @@ generator client {
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
-  relationMode = "prisma"
 }
 
-model RaceData {
+model RaceDataDB {
   id String @id @default(auto()) @map("_id") @db.ObjectId
-  carId Int
-  lapTime DateTime
-  bestLapTime DateTime
-  laps Int
-  racingMode Int // 0 = Race, 1 = Qualifying, Practice sessions will not be stored
+  num              Int
+  position         Int
+  time             Int
+  laptime          Int
+  bestlap          Int
+  laps             Int
+  pits             Int
+  fuel             Boolean
+  pit              Boolean
+  has_fastest_lap  Boolean  
+  raceId           String
 }
