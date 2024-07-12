@@ -63,14 +63,29 @@ class RaceSimulation:
                 eventlet.sleep()
                 eventlet.sleep(random.uniform(7.4, 11.0))
 
-            if all(driver.laps >= self.max_laps for driver in self.drivers):
-                self.stop()
+                if driver.laps >= self.max_laps:
+                    self.stop()
+                    sio.emit("session_over", "Rennen beendet", skip_sid=True)
+                    eventlet.sleep()
+                    return
+
+    def reset(self):
+        for driver in self.drivers:
+            driver.time = None
+            driver.laptime = None
+            driver.bestlap = None
+            driver.laps = 0
+            driver.pits = 0
+            driver.fuel = 0
+            driver.pit = False
+            driver.has_fastest_lap = False
 
     def stop(self):
         self.running = False
+        self.reset()
 
 
-simulation = RaceSimulation(num_drivers=5, max_laps=20)
+simulation = RaceSimulation(num_drivers=2, max_laps=3)
 
 
 @sio.event
