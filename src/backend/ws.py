@@ -11,25 +11,27 @@ sio = socketio.Server(cors_allowed_origins='http://localhost:3000')
 app = socketio.WSGIApp(sio)
 
 
-class Driver:
-    def __init__(self, num):
-        self.num = num
-        self.time = None
-        self.laptime = None
-        self.bestlap = None
-        self.laps = 0
-        self.pits = 0
-        self.fuel = 0
-        self.pit = False
-        self.position = 0
-        self.has_fastest_lap = False
+def posgetter(drivers: dict):
+    return (-drivers["laps"], drivers["time"])
 
 
 class RaceSimulation:
+    class Driver:
+        def __init__(self, num):
+            self.num = num
+            self.time = None
+            self.laptime = None
+            self.bestlap = None
+            self.laps = 0
+            self.pits = 0
+            self.fuel = 0
+            self.pit = False
+            self.has_fastest_lap = False
+
     def __init__(self, num_drivers, max_laps):
-        self.drivers = [Driver(i) for i in range(num_drivers)]
-        self.running = False
+        self.drivers = [self.Driver(num) for num in range(1, num_drivers + 1)]
         self.max_laps = max_laps
+        self.running = False
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
@@ -37,7 +39,10 @@ class RaceSimulation:
             driver.laptime for driver in self.drivers if driver.laptime)
         for driver in self.drivers:
             driver.has_fastest_lap = driver.laptime == fastest_lap
-        return drivers
+
+        sorted_drivers = sorted(drivers, key=posgetter)
+        print(f"sorted_drivers: {sorted_drivers}")
+        return sorted_drivers
 
     def run(self):
         self.running = True
