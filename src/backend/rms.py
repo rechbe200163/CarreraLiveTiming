@@ -81,7 +81,7 @@ class RMS(object):
                     self.handle_status(data)
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
-                    sio.emit('update', self.update(), skip_sid=True)
+                    sio.emit('update', self.update())
                     eventlet.sleep()
                 else:
                     logging.warn("Unknown data from CU: " + data)
@@ -122,18 +122,32 @@ rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))
 
 @sio.event
 def connect(sid, environ):
-    rms.reset()
+    print('Client connected:', sid)
 
 
 @sio.event
 def disconnect(sid):
-    print('disconnect ', sid)
+    print('Client disconnected:', sid)
 
 
-def start_rms():
-    rms.run()
+@sio.event
+def qualifing():
+    ...
+
+
+@sio.event
+def stop(sid):
+    rms.stop()
+    print("stopped session successfully")
+    sio.emit("stop_success", "stopped session successfully", to=sid)
+
+
+@sio.event
+def start(sid):
+    eventlet.spawn(rms.run)
+    sio.emit("start_success", "started session successfully", to=sid)
 
 
 if __name__ == '__main__':
-    eventlet.spawn(start_rms)
-    eventlet.wsgi.server(eventlet.listen(('', 5000)), app)
+    eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
+    rms.stop()
