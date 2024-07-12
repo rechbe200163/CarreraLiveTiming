@@ -23,7 +23,6 @@ interface TableComponentProps {
 
 export default function TableComponent({ type }: TableComponentProps) {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
-  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -38,10 +37,6 @@ export default function TableComponent({ type }: TableComponentProps) {
       console.log("Received update:", newData);
       const processedData = getFastestLapCars(newData);
       setRaceData(processedData);
-      setLoading(false);
-      if (type === "rennen" || type === "qualifying") {
-        postRaceData(processedData);
-      }
 
       // Check for new fastest lap
       const newFastestLap = Math.min(
@@ -61,6 +56,30 @@ export default function TableComponent({ type }: TableComponentProps) {
           variant: "success",
         });
       }
+    });
+
+    socket.on("start_success", (mes: string) => {
+      toast({
+        title: "Rennen gestartet",
+        description: mes,
+        variant: "success",
+      });
+    });
+
+    socket.on("stop_success", (mes: string) => {
+      toast({
+        title: "Rennen gestoppt",
+        description: mes,
+        variant: "success",
+      });
+    });
+
+    socket.on("session_over", (mes: string) => {
+      toast({
+        title: "Rennen beendet",
+        description: mes,
+        variant: "default",
+      });
     });
 
     socket.on("disconnect", () => {
