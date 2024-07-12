@@ -15,13 +15,7 @@ const InteractingComponent = ({ action }: { action: string }) => {
     }
   };
 
-  socket.on("start_success", (mes: string) => {
-    console.log(mes);
-  });
 
-  socket.on("stop_success", (mes: string) => {
-    console.log(mes);
-  });
 
   return (
     <div>
