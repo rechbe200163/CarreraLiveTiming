@@ -45,6 +45,7 @@ class RMS(object):
             self.pits = 0
             self.fuel = 0
             self.pit = False
+            self.has_fastest_lap = False
 
         def newlap(self, timer):
             if self.time is not None:
@@ -73,7 +74,6 @@ class RMS(object):
         last = None
         while True:
             try:
-
                 data = self.cu.poll()
                 if data == last:
                     continue
@@ -112,8 +112,14 @@ class RMS(object):
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
-        print("Drivers: ", drivers)
-        return drivers
+        fastest_lap = min(
+            driver.laptime for driver in self.drivers if driver.laptime)
+        for driver in self.drivers:
+            driver.has_fastest_lap = driver.laptime == fastest_lap
+
+        sorted_drivers = sorted(drivers, key=posgetter)
+        print(f"sorted_drivers: {sorted_drivers}")
+        return sorted_drivers
 
 
 # RMS-Instanz mit ControlUnit initialisieren
