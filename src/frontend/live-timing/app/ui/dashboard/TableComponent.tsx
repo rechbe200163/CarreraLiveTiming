@@ -39,13 +39,13 @@ export default function TableComponent({ type }: TableComponentProps) {
       const processedData = getFastestLapCars(newData);
       setRaceData(processedData);
       setLoading(false);
-      if (type === "race" || type === "qualifying") {
+      if (type === "rennen" || type === "qualifying") {
         postRaceData(processedData);
       }
 
       // Check for new fastest lap
       const newFastestLap = Math.min(
-        ...processedData.map((data) => data.bestlap)
+        ...processedData.map((data: RaceData) => data.bestlap)
       );
       const currentFastestLap = Math.min(
         ...raceData.map((data) => data.bestlap)
@@ -53,12 +53,12 @@ export default function TableComponent({ type }: TableComponentProps) {
 
       if (newFastestLap < currentFastestLap) {
         toast({
-          title: "New fastest lap",
-          description: `New fastest lap time: ${formatTime(
+          title: "Neue schnellste Runde!",
+          description: `Neue Bestzeit gesetzt! Rundenzeit: ${formatTime(
             newFastestLap,
             "laptime"
           )}`,
-          variant: "fastest",
+          variant: "success",
         });
       }
     });
@@ -95,7 +95,7 @@ export default function TableComponent({ type }: TableComponentProps) {
                 })}
               >
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{car.num + 1}</TableCell>
+                <TableCell>{car.num}</TableCell>
                 <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
                 <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
                 <TableCell>{car.laps}</TableCell>

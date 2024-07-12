@@ -1,5 +1,6 @@
-import InteractingComponent from "@/app/ui/dashboard/ImteractingComponent";
+import InteractingComponent from "@/app/ui/dashboard/InteractingComponent";
 import TableComponent from "@/app/ui/dashboard/TableComponent";
+import AlertComponent from "@/app/ui/helper/AlertComponent";
 import Breadcrumbs from "@/app/ui/helper/BreadCrumps";
 
 export default async function LiveTimingData({
@@ -8,21 +9,32 @@ export default async function LiveTimingData({
   params: { type: string };
 }) {
   return (
-    <div className="flex flex-col items-center font-extrabold text-3xl gap-10">
-      <Breadcrumbs
-        breadcrumbs={[
-          { label: "Home", href: "/" },
-          { label: "Live Daten", href: "/live-timing" },
-        ]}
-      />
-      <div className="flex flex-row-reverse p-5">
-        <h1>Live Daten | {params.type.toLocaleUpperCase()}</h1>
+    <>
+      <div className="py-5">
+        <Breadcrumbs
+          breadcrumbs={[
+            { label: "Home", href: "/" },
+            { label: "Live Daten", href: "/live-timing/" },
+            { label: params.type.toLocaleUpperCase(), href: "#" },
+          ]}
+        />
       </div>
-      <div className="flex flex-row ">
-        <InteractingComponent action="start" />
-        <InteractingComponent action="stop" />
+      {params.type === "training" ? (
+        <div className="pb-10">
+          <AlertComponent
+            title="Achtung!"
+            message="Daten während des Trainings werden nicht gespeichert."
+          />
+        </div>
+      ) : null}
+
+      <div className="flex flex-row">
+        <TableComponent type={params.type} />
+        <div className="flex flex-row pl-10 space-x-10">
+          <InteractingComponent action="start" />
+          <InteractingComponent action="stop" />
+        </div>
       </div>
-      <TableComponent type={params.type} />
-    </div>
+    </>
   );
 }
