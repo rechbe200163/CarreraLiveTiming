@@ -21,5 +21,4 @@ model RaceDataDB {
   fuel             Boolean
   pit              Boolean
   has_fastest_lap  Boolean  
-  raceId           String
 }
