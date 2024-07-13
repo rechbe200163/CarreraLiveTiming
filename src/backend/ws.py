@@ -11,8 +11,8 @@ sio = socketio.Server(cors_allowed_origins='http://localhost:3000')
 app = socketio.WSGIApp(sio)
 
 
-def posgetter(drivers: dict):
-    return (-drivers["laps"], drivers["time"])
+def posgetter(driver):
+    return (-driver.laps, driver.time)
 
 
 class RaceSimulation:
@@ -23,9 +23,6 @@ class RaceSimulation:
             self.laptime = None
             self.bestlap = None
             self.laps = 0
-            self.pits = 0
-            self.fuel = 0
-            self.pit = False
             self.has_fastest_lap = False
 
     def __init__(self, num_drivers, max_laps):
@@ -34,15 +31,22 @@ class RaceSimulation:
         self.running = False
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
-        drivers = [driver.__dict__ for driver in self.drivers if driver.time]
-        fastest_lap = min(
-            driver.laptime for driver in self.drivers if driver.laptime)
-        for driver in self.drivers:
-            driver.has_fastest_lap = driver.laptime == fastest_lap
+        drivers_with_laptime = [
+            driver for driver in self.drivers if driver.laptime]
+        if drivers_with_laptime:
+            fastest_lap = min(
+                driver.laptime for driver in drivers_with_laptime)
+            for driver in self.drivers:
+                driver.has_fastest_lap = driver.laptime == fastest_lap
+        else:
+            fastest_lap = None
 
-        sorted_drivers = sorted(drivers, key=posgetter)
-        print(f"sorted_drivers: {sorted_drivers}")
-        return sorted_drivers
+        sorted_drivers = sorted(self.drivers, key=posgetter)
+        return [driver.__dict__ for driver in sorted_drivers]
+
+    def podium_data(self):
+        podium_places = sorted(self.drivers, key=posgetter)[:3]
+        return [driver.__dict__ for driver in podium_places]
 
     def run(self):
         self.running = True
@@ -53,10 +57,6 @@ class RaceSimulation:
                 driver.bestlap = min(
                     driver.bestlap or driver.laptime, driver.laptime)
                 driver.laps += 1
-                driver.pits = random.randint(0, 5)
-                driver.fuel = False
-                driver.pit = False
-                driver.position = random.randint(1, len(self.drivers))
 
                 sio.emit("update", self.update())
                 print("emitted update")
@@ -64,8 +64,8 @@ class RaceSimulation:
                 eventlet.sleep(random.uniform(7.4, 11.0))
 
                 if driver.laps >= self.max_laps:
+                    sio.emit("session_over", self.podium_data(), skip_sid=True)
                     self.stop()
-                    sio.emit("session_over", "Rennen beendet", skip_sid=True)
                     eventlet.sleep()
                     return
 
@@ -75,9 +75,6 @@ class RaceSimulation:
             driver.laptime = None
             driver.bestlap = None
             driver.laps = 0
-            driver.pits = 0
-            driver.fuel = 0
-            driver.pit = False
             driver.has_fastest_lap = False
 
     def stop(self):

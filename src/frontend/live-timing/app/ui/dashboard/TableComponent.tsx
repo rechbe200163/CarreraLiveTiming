@@ -13,9 +13,11 @@ import { useToast } from "@/components/ui/use-toast";
 import React, { useState, useEffect, Suspense } from "react";
 import { connectToSocket, getFastestLapCars } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
-import { RaceData } from "@/lib/types";
-import { postRaceData } from "@/lib/db";
+import { PodiumData, RaceData } from "@/lib/types";
 import clsx from "clsx";
+import { ToastAction } from "@radix-ui/react-toast";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface TableComponentProps {
   type: string;
@@ -23,6 +25,9 @@ interface TableComponentProps {
 
 export default function TableComponent({ type }: TableComponentProps) {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
+  const [raceId, setRaceId] = useState<number>(0);
+
+  const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -74,12 +79,37 @@ export default function TableComponent({ type }: TableComponentProps) {
       });
     });
 
-    socket.on("session_over", (mes: string) => {
-      toast({
-        title: "Rennen beendet",
-        description: mes,
-        variant: "default",
-      });
+    socket.on("session_over", async (podiumData: PodiumData[]) => {
+      if (type === "rennen" || type === "qualifying") {
+        try {
+          console.log("Podium data:", podiumData);
+          const response = await fetch("/api/createRacePodium", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ podiumData }),
+          });
+          const data = await response.json();
+          console.log("Podium created:", data.raceId);
+          setRaceId(data.raceId);
+        } catch (error) {
+          console.error("Error creating podium:", error);
+        }
+        toast({
+          title: "Rennen beendet",
+          description: "rennen beendet",
+          variant: "default",
+          action: (
+            <ToastAction
+              altText="Try again"
+              onClick={() => router.push(`/live-timing/podium/${raceId}`)}
+            >
+              Podium ansehen {raceId}
+            </ToastAction>
+          ),
+        });
+      }
     });
 
     socket.on("disconnect", () => {

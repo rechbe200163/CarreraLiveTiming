@@ -1,5 +1,5 @@
-import errno
 import logging
+import errno
 import select
 import time
 from flask import Flask, jsonify, render_template
@@ -8,12 +8,15 @@ from carreralib import ControlUnit
 import eventlet
 import socketio
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
 
 def posgetter(driver):
-    return (-driver.laps, driver.time)
+    return (-driver["laps"], driver["time"])
 
 
 def formattime(time, longfmt=False):
@@ -31,7 +34,6 @@ def formattime(time, longfmt=False):
 
 
 class RMS(object):
-
     # CU reports zero fuel for all cars unless pit lane adapter is connected
     FUEL_MASK = ControlUnit.Status.PIT_LANE_MODE
 
@@ -82,9 +84,9 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep()
+                    eventlet.sleep(1)  # Add delay between updates
                 else:
-                    logging.warn("Unknown data from CU: " + data)
+                    logging.warning("Unknown data from CU: " + str(data))
                 last = data
             except select.error:
                 pass
@@ -103,7 +105,12 @@ class RMS(object):
 
     def handle_timer(self, timer):
         driver = self.drivers[timer.address]
-        driver.newlap(timer)
+        if driver.time is not None:
+            driver.laptime = timer.timestamp - driver.time
+            if driver.bestlap is None or driver.laptime < driver.bestlap:
+                driver.bestlap = driver.laptime
+        driver.time = timer.timestamp
+        driver.laps += 1
         if self.maxlaps < driver.laps:
             self.maxlaps = driver.laps
             self.cu.setlap(self.maxlaps % 250)
@@ -112,28 +119,39 @@ class RMS(object):
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         drivers = [driver.__dict__ for driver in self.drivers if driver.time]
-        fastest_lap = min(
-            driver.laptime for driver in self.drivers if driver.laptime)
-        for driver in self.drivers:
-            driver.has_fastest_lap = driver.laptime == fastest_lap
 
-        sorted_drivers = sorted(drivers, key=posgetter)
-        print(f"sorted_drivers: {sorted_drivers}")
-        return sorted_drivers
+        if drivers:
+            # Ensure there are lap times before attempting to find the fastest lap
+            lap_times = [
+                driver.laptime for driver in self.drivers if driver.laptime]
+            if lap_times:
+                fastest_lap = min(lap_times)
+                for driver in self.drivers:
+                    driver.has_fastest_lap = driver.laptime == fastest_lap
+            else:
+                # No valid lap times yet
+                fastest_lap = None
+                for driver in self.drivers:
+                    driver.has_fastest_lap = False
+
+            sorted_drivers = sorted(drivers, key=posgetter)
+            return sorted_drivers
+        else:
+            return []
 
 
 # RMS-Instanz mit ControlUnit initialisieren
-rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))
+rms = RMS(ControlUnit('076123CC-BB75-6373-50E9-32C05B25B413'))
 
 
 @sio.event
 def connect(sid, environ):
-    print('Client connected:', sid)
+    logging.info('Client connected: %s', sid)
 
 
 @sio.event
 def disconnect(sid):
-    print('Client disconnected:', sid)
+    logging.info('Client disconnected: %s', sid)
 
 
 @sio.event
@@ -144,16 +162,19 @@ def qualifing():
 @sio.event
 def stop(sid):
     rms.stop()
-    print("stopped session successfully")
+    logging.info("stopped session successfully")
     sio.emit("stop_success", "stopped session successfully", to=sid)
 
 
 @sio.event
 def start(sid):
     eventlet.spawn(rms.run)
+    logging.info("started session successfully")
     sio.emit("start_success", "started session successfully", to=sid)
 
 
 if __name__ == '__main__':
-    eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
-    rms.stop()
+    try:
+        eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
+    finally:
+        rms.stop()
