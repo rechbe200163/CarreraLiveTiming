@@ -73,8 +73,9 @@ class RMS(object):
         self.cu.clrpos()
 
     def run(self):
+        self.running = True
         last = None
-        while True:
+        while self.running:
             try:
                 data = self.cu.poll()
                 if data == last:
@@ -88,11 +89,13 @@ class RMS(object):
                 else:
                     logging.warning("Unknown data from CU: " + str(data))
                 last = data
+
             except select.error:
                 pass
             except IOError as e:
                 if e.errno != errno.EINTR:
                     raise
+
 
     def handle_status(self, status):
         for driver, fuel in zip(self.drivers, status.fuel):
@@ -138,10 +141,14 @@ class RMS(object):
             return sorted_drivers
         else:
             return []
+        
+    def stop(self):
+        self.running = False
+        self.reset()
 
 
 # RMS-Instanz mit ControlUnit initialisieren
-rms = RMS(ControlUnit('076123CC-BB75-6373-50E9-32C05B25B413'))
+rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))
 
 
 @sio.event
