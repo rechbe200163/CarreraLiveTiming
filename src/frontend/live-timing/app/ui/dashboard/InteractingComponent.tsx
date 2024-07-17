@@ -1,27 +1,16 @@
-"use client";
-import React from "react";
+import FormComponent from "./FormComponent";
 import { connectToSocket } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 
-const InteractingComponent = ({ action }: { action: string }) => {
+export default function InteractingComponent({
+  action,
+}: {
+  action: "start" | "stop";
+}) {
   const socket = connectToSocket("http://localhost:8765");
 
-  const startRace = (action: string) => {
-    if (action === "start") {
-      socket.emit("start");
-    }
-    if (action === "stop") {
-      socket.emit("stop");
-    }
-  };
-
-
-
   return (
-    <div>
-      <Button onClick={() => startRace(action)}>{action}</Button>
+    <div className="flex flex-col md:flex-row items-start justify-between gap-8">
+      <FormComponent />
     </div>
   );
-};
-
-export default InteractingComponent;
+}
