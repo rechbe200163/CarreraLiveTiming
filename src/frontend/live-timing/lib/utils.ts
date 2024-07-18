@@ -11,7 +11,10 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format time function provided in milliseconds
-export function formatTime(time: number, type: string = "racetime") {
+export function formatTime(
+  time: number,
+  type: string = "racetime" || "laptime"
+) {
   if (time === null) {
     return "-";
   }
