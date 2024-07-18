@@ -35,7 +35,7 @@ def formattime(time, longfmt=False):
 
 class RMS(object):
     # CU reports zero fuel for all cars unless pit lane adapter is connected
-    FUEL_MASK = ControlUnit.Status.FUEL_MODE
+    FUEL_MASK = ControlUnit.Status.PIT_LANE_MODE
 
     class Driver(object):
         def __init__(self, num):
@@ -57,7 +57,9 @@ class RMS(object):
                 self.laps += 1
             self.time = timer.timestamp
 
-    def __init__(self, cu):
+    def __init__(self, cu, max_laps=None, max_time=None):
+        self.max_laps = max_laps
+        self.max_time = max_time
         self.cu = cu
         self.reset()
 
@@ -82,6 +84,8 @@ class RMS(object):
                     continue
                 elif isinstance(data, ControlUnit.Status):
                     self.handle_status(data)
+                    sio.emit('update', self.update())
+                    eventlet.sleep(0.5)  # Add delay between updates
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
@@ -90,16 +94,20 @@ class RMS(object):
                     logging.warning("Unknown data from CU: " + str(data))
                 last = data
 
-            except select.error:
-                pass
+                if self.max_time and (time.time() - self.start_time) >= self.max_time:
+                    sio.emit("session_over", skip_sid=True)
+                    self.stop()
+                    return
             except IOError as e:
-                if e.errno != errno.EINTR:
+                if e.errno == errno.EAGAIN:
+                    continue
+                else:
                     raise
 
 
     def handle_status(self, status):
         for driver, fuel in zip(self.drivers, status.fuel):
-            driver.fuel = fuel
+            driver.fuel = round(fuel / 14.0 * 100.0, 1)
         for driver, pit in zip(self.drivers, status.pit):
             if pit and not driver.pit:
                 driver.pits += 1
@@ -119,6 +127,11 @@ class RMS(object):
             self.cu.setlap(self.maxlaps % 250)
         if self.start is None:
             self.start = timer.timestamp
+
+        if self.max_laps and driver.laps >= self.max_laps:
+            sio.emit("session_over", skip_sid=True)
+            self.stop()
+            return
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
         valid_drivers = [driver for driver in self.drivers if driver.time]
@@ -152,10 +165,9 @@ class RMS(object):
         self.reset()
 
 
+race = None
+
 # RMS-Instanz mit ControlUnit initialisieren
-rms = RMS(ControlUnit('D2:B9:57:15:EE:AC'))
-
-
 @sio.event
 def connect(sid, environ):
     logging.info('Client connected: %s', sid)
@@ -172,21 +184,44 @@ def qualifing():
 
 
 @sio.event
-def stop(sid):
-    rms.stop()
-    logging.info("stopped session successfully")
-    sio.emit("stop_success", "stopped session successfully", to=sid)
+def stop(sid, data=None):
+    global race
+    if race:
+        print("Stopping race simulation...")
+        race.stop()
+        sio.emit("stop_success", "Stopped session successfully", to=sid)
+        race = None
+        print(race)
+    else:
+        print("No active simulation to stop.")
+        sio.emit("stop_error", "No active session to stop", to=sid)
 
 
 @sio.event
-def start(sid):
-    eventlet.spawn(rms.run)
-    logging.info("started session successfully")
-    sio.emit("start_success", "started session successfully", to=sid)
+def start(sid, data):
+    global race
+    print("Data", data)
+    # data format: {'race_type': 'laps', 'max_laps': 1, 'max_time': None}
+    race_type = data.get('race_type')
+    max_laps = data.get('max_laps')
+    max_time = data.get('max_time')
+
+    if race:
+        sio.emit("start_error", "A session is already running", to=sid)
+        return
+
+    if race_type == "laps" and max_laps is not None:
+        race = RMS(cu= ControlUnit('D2:B9:57:15:EE:AC'),max_laps=max_laps)
+    elif race_type == "time" and max_time is not None:
+        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'),max_time=max_time)
+    else:
+        sio.emit("start_error", "Invalid parameters", to=sid)
+        return
+
+    # Start the simulation
+    eventlet.spawn(race.run)
+    sio.emit("start_success", "Started session successfully", to=sid)
 
 
 if __name__ == '__main__':
-    try:
-        eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
-    finally:
-        rms.stop()
+    eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
