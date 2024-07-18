@@ -16,7 +16,7 @@ app = socketio.WSGIApp(sio)
 
 
 def posgetter(driver):
-    return (-driver["laps"], driver["time"])
+    return (-driver.laps, driver.time)
 
 
 def formattime(time, longfmt=False):
@@ -35,7 +35,7 @@ def formattime(time, longfmt=False):
 
 class RMS(object):
     # CU reports zero fuel for all cars unless pit lane adapter is connected
-    FUEL_MASK = ControlUnit.Status.PIT_LANE_MODE
+    FUEL_MASK = ControlUnit.Status.FUEL_MODE
 
     class Driver(object):
         def __init__(self, num):
@@ -85,7 +85,7 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep(1)  # Add delay between updates
+                    eventlet.sleep(0.5)  # Add delay between updates
                 else:
                     logging.warning("Unknown data from CU: " + str(data))
                 last = data
@@ -121,27 +121,32 @@ class RMS(object):
             self.start = timer.timestamp
 
     def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
-        drivers = [driver.__dict__ for driver in self.drivers if driver.time]
+        valid_drivers = [driver for driver in self.drivers if driver.time]
 
-        if drivers:
+        if valid_drivers:
+            # Initialize fastest_lap to None
+            fastest_lap = None
+
             # Ensure there are lap times before attempting to find the fastest lap
-            lap_times = [
-                driver.laptime for driver in self.drivers if driver.laptime]
+            lap_times = [driver.laptime for driver in self.drivers if driver.laptime]
             if lap_times:
                 fastest_lap = min(lap_times)
                 for driver in self.drivers:
                     driver.has_fastest_lap = driver.laptime == fastest_lap
             else:
                 # No valid lap times yet
-                fastest_lap = None
                 for driver in self.drivers:
                     driver.has_fastest_lap = False
 
-            sorted_drivers = sorted(drivers, key=posgetter)
-            return sorted_drivers
+            sorted_drivers = sorted(valid_drivers, key=posgetter)
+
+            # Convert sorted driver objects to dictionaries if needed
+            sorted_drivers_dicts = [driver.__dict__ for driver in sorted_drivers]
+            return sorted_drivers_dicts
         else:
             return []
-        
+
+            
     def stop(self):
         self.running = False
         self.reset()
