@@ -17,6 +17,7 @@ import { PodiumData, RaceData } from "@/lib/types";
 import clsx from "clsx";
 import { ToastAction } from "@radix-ui/react-toast";
 import { useRouter } from "next/navigation";
+import FuelStatusBar from "./FuelBar";
 
 interface TableComponentProps {
   type: string;
@@ -131,6 +132,7 @@ export default function TableComponent({ type }: TableComponentProps) {
             <TableHead className="w-[100px]">Last Lap</TableHead>
             <TableHead className="w-[100px]">Best Lap</TableHead>
             <TableHead className="w-[100px]">Laps</TableHead>
+            <TableHead className="w-3">Fuel Level</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -147,6 +149,9 @@ export default function TableComponent({ type }: TableComponentProps) {
                 <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
                 <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
                 <TableCell>{car.laps}</TableCell>
+                <TableCell>
+                  <FuelStatusBar fuelLevel={car.fuel} />
+                </TableCell>
               </TableRow>
             ))}
           </Suspense>
