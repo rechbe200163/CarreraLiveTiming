@@ -57,6 +57,10 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        green: {
+          DEFAULT: "hsl(var(--green))",
+          foreground: "hsl(var(--green-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -76,6 +80,14 @@ const config = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      // Custom fuel bar styles
+      spacing: {
+        "fuel-bar-height": "24px",
+      },
+      backgroundColor: {
+        "fuel-bar": "#e0e0e0",
+        "fuel-bar-fill": "green",
       },
     },
   },
