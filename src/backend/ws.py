@@ -23,14 +23,19 @@ class RaceSimulation:
             self.laptime = None
             self.bestlap = None
             self.laps = 0
+            self.pits = 0
+            self.fuel = 100
+            self.pit = False
             self.has_fastest_lap = False
 
-    def __init__(self, num_drivers, max_laps):
+    def __init__(self, num_drivers=2, max_laps=None, max_time=None):
         self.drivers = [self.Driver(num) for num in range(1, num_drivers + 1)]
         self.max_laps = max_laps
+        self.max_time = max_time
+        self.start_time = None
         self.running = False
 
-    def update(self, blink=lambda: (time.time() * 2) % 2 == 0):
+    def update(self):
         drivers_with_laptime = [
             driver for driver in self.drivers if driver.laptime]
         if drivers_with_laptime:
@@ -50,6 +55,7 @@ class RaceSimulation:
 
     def run(self):
         self.running = True
+        self.start_time = time.time()
         while self.running:
             for driver in self.drivers:
                 driver.time = int(time.time() * 1000)
@@ -57,17 +63,26 @@ class RaceSimulation:
                 driver.bestlap = min(
                     driver.bestlap or driver.laptime, driver.laptime)
                 driver.laps += 1
+                driver.fuel -= 12
+                driver.pit = driver.fuel <= 5
+                if driver.pit:
+                    driver.pits += 1
+                    driver.fuel = 100
+                    driver.pit = False
 
                 sio.emit("update", self.update())
-                print("emitted update")
-                eventlet.sleep()
+                print("Emitted update")
                 eventlet.sleep(random.uniform(7.4, 11.0))
 
-                if driver.laps >= self.max_laps:
+                if self.max_laps and driver.laps >= self.max_laps:
                     sio.emit("session_over", self.podium_data(), skip_sid=True)
                     self.stop()
-                    eventlet.sleep()
                     return
+
+            if self.max_time and (time.time() - self.start_time) >= self.max_time:
+                sio.emit("session_over", self.podium_data(), skip_sid=True)
+                self.stop()
+                return
 
     def reset(self):
         for driver in self.drivers:
@@ -75,14 +90,18 @@ class RaceSimulation:
             driver.laptime = None
             driver.bestlap = None
             driver.laps = 0
+            driver.pits = 0
+            driver.fuel = 100
+            driver.pit = False
             driver.has_fastest_lap = False
 
     def stop(self):
         self.running = False
         self.reset()
+        sio.emit("session_over", self.update(), skip_sid=True)
 
 
-simulation = RaceSimulation(num_drivers=2, max_laps=3)
+simulation = None
 
 
 @sio.event
@@ -96,23 +115,44 @@ def disconnect(sid):
 
 
 @sio.event
-def qualifing():
-    ...
+def stop(sid, data=None):
+    global simulation
+    if simulation:
+        print("Stopping race simulation...")
+        simulation.stop()
+        sio.emit("stop_success", "Stopped session successfully", to=sid)
+        simulation = None
+        print(simulation)
+    else:
+        print("No active simulation to stop.")
+        sio.emit("stop_error", "No active session to stop", to=sid)
 
 
 @sio.event
-def stop(sid):
-    simulation.stop()
-    print("stopped session successfully")
-    sio.emit("stop_success", "stopped session successfully", to=sid)
+def start(sid, data):
+    global simulation
+    print("Data", data)
+    # data format: {'race_type': 'laps', 'max_laps': 1, 'max_time': None}
+    race_type = data.get('race_type')
+    max_laps = data.get('max_laps')
+    max_time = data.get('max_time')
 
+    if simulation:
+        sio.emit("start_error", "A session is already running", to=sid)
+        return
 
-@sio.event
-def start(sid):
+    if race_type == "laps" and max_laps is not None:
+        simulation = RaceSimulation(max_laps=max_laps)
+    elif race_type == "time" and max_time is not None:
+        simulation = RaceSimulation(max_time=max_time)
+    else:
+        sio.emit("start_error", "Invalid parameters", to=sid)
+        return
+
+    # Start the simulation
     eventlet.spawn(simulation.run)
-    sio.emit("start_success", "started session successfully", to=sid)
+    sio.emit("start_success", "Started session successfully", to=sid)
 
 
 if __name__ == '__main__':
     eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
-    simulation.stop()

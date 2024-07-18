@@ -16,8 +16,8 @@ import { formatTime } from "@/lib/utils";
 import { PodiumData, RaceData } from "@/lib/types";
 import clsx from "clsx";
 import { ToastAction } from "@radix-ui/react-toast";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import FuelStatusBar from "./FuelBar";
 
 interface TableComponentProps {
   type: string;
@@ -45,10 +45,10 @@ export default function TableComponent({ type }: TableComponentProps) {
 
       // Check for new fastest lap
       const newFastestLap = Math.min(
-        ...processedData.map((data: RaceData) => data.bestlap)
+        ...processedData.map((data: RaceData) => data.bestlap || Infinity) // Handle null values
       );
       const currentFastestLap = Math.min(
-        ...raceData.map((data) => data.bestlap)
+        ...raceData.map((data) => data.bestlap || Infinity) // Handle null values
       );
 
       if (newFastestLap < currentFastestLap) {
@@ -122,7 +122,7 @@ export default function TableComponent({ type }: TableComponentProps) {
   }, [toast, type, raceData]); // Include raceData in dependencies to track changes
 
   return (
-    <div className="w-full lg:w-2/3 font-normal antialiased">
+    <div className="w-full font-normal antialiased">
       <Table>
         <TableCaption>Live Daten aus dem Rennen</TableCaption>
         <TableHeader>
@@ -132,13 +132,14 @@ export default function TableComponent({ type }: TableComponentProps) {
             <TableHead className="w-[100px]">Last Lap</TableHead>
             <TableHead className="w-[100px]">Best Lap</TableHead>
             <TableHead className="w-[100px]">Laps</TableHead>
+            <TableHead className="w-3">Fuel Level</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           <Suspense fallback={<RacingDataSkeleton />}>
             {raceData.map((car: RaceData, index: number) => (
               <TableRow
-                key={car.num}
+                key={car.num} // Add unique key prop
                 className={clsx("transition-colors duration-200", {
                   "bg-green-400 text-gray-500": car.has_fastest_lap === true,
                 })}
@@ -148,6 +149,9 @@ export default function TableComponent({ type }: TableComponentProps) {
                 <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
                 <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
                 <TableCell>{car.laps}</TableCell>
+                <TableCell>
+                  <FuelStatusBar fuelLevel={car.fuel} />
+                </TableCell>
               </TableRow>
             ))}
           </Suspense>

@@ -1,16 +1,28 @@
+"use client";
+
+import ButtonComponent from "@/app/ui/dashboard/ButtonComponent";
 import InteractingComponent from "@/app/ui/dashboard/InteractingComponent";
 import TableComponent from "@/app/ui/dashboard/TableComponent";
 import AlertComponent from "@/app/ui/helper/AlertComponent";
 import Breadcrumbs from "@/app/ui/helper/BreadCrumps";
+import { Button } from "@/components/ui/button";
+import { connectToSocket } from "@/lib/utils";
 
 export default async function LiveTimingData({
   params,
 }: {
   params: { type: string };
 }) {
+  const socket = connectToSocket("http://localhost:8765");
+
+  function onClick() {
+    // Stop
+    socket.emit("stop");
+  }
+
   return (
     <>
-      <div className="py-5">
+      <div className="py-5 flex flex-row justify-between">
         <Breadcrumbs
           breadcrumbs={[
             { label: "Home", href: "/" },
@@ -18,6 +30,7 @@ export default async function LiveTimingData({
             { label: params.type.toLocaleUpperCase(), href: "#" },
           ]}
         />
+        <ButtonComponent label="Stop Race" method={onClick} />
       </div>
       {params.type === "training" ? (
         <div className="pb-10">
@@ -28,12 +41,11 @@ export default async function LiveTimingData({
         </div>
       ) : null}
 
-      <div className="flex flex-row">
-        <TableComponent type={params.type} />
-        <div className="flex flex-row pl-10 space-x-10">
+      <div className="flex flex-col">
+        <div className="flex flex-row items-center justify-between">
           <InteractingComponent action="start" />
-          <InteractingComponent action="stop" />
         </div>
+        <TableComponent type={params.type} />
       </div>
     </>
   );

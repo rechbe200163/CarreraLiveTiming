@@ -12,6 +12,10 @@ export function cn(...inputs: ClassValue[]) {
 
 // Format time function provided in milliseconds
 export function formatTime(time: number, type: string = "racetime") {
+  if (time === null) {
+    return "-";
+  }
+
   if (type === "laptime") {
     return formatLapTime(time);
   }
