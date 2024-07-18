@@ -4,6 +4,9 @@ export interface RaceData {
   laptime: number;
   bestlap: number;
   laps: number;
+  fuel: number;
+  pits: number;
+  pit: boolean;
   has_fastest_lap: boolean;
 }
 
