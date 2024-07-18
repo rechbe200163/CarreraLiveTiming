@@ -63,6 +63,12 @@ class RaceSimulation:
                 driver.bestlap = min(
                     driver.bestlap or driver.laptime, driver.laptime)
                 driver.laps += 1
+                driver.fuel -= 12
+                driver.pit = driver.fuel <= 5
+                if driver.pit:
+                    driver.pits += 1
+                    driver.fuel = 100
+                    driver.pit = False
 
                 sio.emit("update", self.update())
                 print("Emitted update")
