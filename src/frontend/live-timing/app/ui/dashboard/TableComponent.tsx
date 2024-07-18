@@ -18,6 +18,7 @@ import clsx from "clsx";
 import { ToastAction } from "@radix-ui/react-toast";
 import { useRouter } from "next/navigation";
 import FuelStatusBar from "./FuelBar";
+import DirverDisplayingComponent from "../helper/DirverDisplayingComponent";
 
 interface TableComponentProps {
   type: string;
@@ -123,38 +124,22 @@ export default function TableComponent({ type }: TableComponentProps) {
 
   return (
     <div className="w-full font-normal antialiased">
-      <Table>
+      <Table className="text-centerr">
         <TableCaption>Live Daten aus dem Rennen</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-3">Position</TableHead>
-            <TableHead className="w-3">Car</TableHead>
-            <TableHead className="w-[100px]">Last Lap</TableHead>
-            <TableHead className="w-[100px]">Best Lap</TableHead>
-            <TableHead className="w-[100px]">Laps</TableHead>
-            <TableHead className="w-3">Fuel Level</TableHead>
+            <TableHead className="text-center">Position</TableHead>
+            <TableHead className="text-center">Car</TableHead>
+            <TableHead className="text-center">Last Lap</TableHead>
+            <TableHead className="text-center">Best Lap</TableHead>
+            <TableHead className=" text-center">Laps</TableHead>
+            <TableHead className="text-center">Fuel Level</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <Suspense fallback={<RacingDataSkeleton />}>
-            {raceData.map((car: RaceData, index: number) => (
-              <TableRow
-                key={car.num} // Add unique key prop
-                className={clsx("transition-colors duration-200", {
-                  "bg-green-400 text-gray-500": car.has_fastest_lap === true,
-                })}
-              >
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{car.num}</TableCell>
-                <TableCell>{formatTime(car.laptime, "laptime")}</TableCell>
-                <TableCell>{formatTime(car.bestlap, "laptime")}</TableCell>
-                <TableCell>{car.laps}</TableCell>
-                <TableCell>
-                  <FuelStatusBar fuelLevel={car.fuel} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </Suspense>
+          {raceData.map((car: RaceData) => (
+            <DirverDisplayingComponent key={car.num} data={car} />
+          ))}
         </TableBody>
       </Table>
     </div>

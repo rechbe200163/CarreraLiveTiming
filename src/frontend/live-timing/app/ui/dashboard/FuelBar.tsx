@@ -1,25 +1,24 @@
 import { cn } from "@/lib/utils";
 import React from "react";
-import { styleText } from "util";
 
-export default function FuelStatusBar({ fuelLevel }: { fuelLevel: number }) {
+type FuelStatusBarProps = {
+  fuelLevel: number;
+};
+
+export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
   return (
-    <div>
-      <div className="bg-fuel-bar rounded-lg">
+    <>
+      <div className="w-24 bg-gray-700 h-4 rounded-full overflow-hidden">
         <div
-          className={cn(
-            "bg-fuel-bar-fill items-center justify-center text-white",
-            {
-              "bg-red-500": fuelLevel < 20,
-              "bg-yellow-500": fuelLevel >= 20 && fuelLevel < 50,
-              "bg-green-500": fuelLevel >= 50,
-            }
-          )}
+          className={cn("h-full items-center justify-center text-white", {
+            "bg-red-500": fuelLevel < 20,
+            "bg-yellow-500": fuelLevel >= 20 && fuelLevel < 50,
+            "bg-green-500": fuelLevel >= 50,
+          })}
           style={{ width: `${fuelLevel}%` }}
-        >
-          {fuelLevel}%
-        </div>
+        ></div>
       </div>
-    </div>
+      <div className="ml-2">{fuelLevel}%</div>
+    </>
   );
 }
