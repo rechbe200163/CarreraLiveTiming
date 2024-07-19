@@ -76,6 +76,7 @@ class RMS(object):
 
     def run(self):
         self.running = True
+        self.start_time = time.time()
         last = None
         while self.running:
             try:
@@ -96,6 +97,7 @@ class RMS(object):
 
                 if self.max_time and (time.time() - self.start_time) >= self.max_time:
                     sio.emit("session_over", skip_sid=True)
+                    eventlet.sleep(0.5)
                     self.stop()
                     return
             except IOError as e:
