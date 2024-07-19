@@ -86,18 +86,18 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Status):
                     self.handle_status(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep(0.5)  # Add delay between updates
+                    eventlet.sleep(0)  # Add delay between updates
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep(0.5)  # Add delay between updates
+                    eventlet.sleep(0)  # Add delay between updates
                 else:
                     logging.warning("Unknown data from CU: " + str(data))
                 last = data
 
                 if self.max_time and (time.time() - self.start_time) >= self.max_time:
                     sio.emit("session_over", skip_sid=True)
-                    eventlet.sleep(0.5)
+                    eventlet.sleep(0)
                     self.stop()
                     return
             except IOError as e:
@@ -105,7 +105,6 @@ class RMS(object):
                     continue
                 else:
                     raise
-
 
     def handle_status(self, status):
         for driver, fuel in zip(self.drivers, status.fuel):
@@ -143,7 +142,8 @@ class RMS(object):
             fastest_lap = None
 
             # Ensure there are lap times before attempting to find the fastest lap
-            lap_times = [driver.laptime for driver in self.drivers if driver.laptime]
+            lap_times = [
+                driver.laptime for driver in self.drivers if driver.laptime]
             if lap_times:
                 fastest_lap = min(lap_times)
                 for driver in self.drivers:
@@ -156,12 +156,12 @@ class RMS(object):
             sorted_drivers = sorted(valid_drivers, key=posgetter)
 
             # Convert sorted driver objects to dictionaries if needed
-            sorted_drivers_dicts = [driver.__dict__ for driver in sorted_drivers]
+            sorted_drivers_dicts = [
+                driver.__dict__ for driver in sorted_drivers]
             return sorted_drivers_dicts
         else:
             return []
 
-            
     def stop(self):
         self.running = False
         self.reset()
@@ -170,6 +170,8 @@ class RMS(object):
 race = None
 
 # RMS-Instanz mit ControlUnit initialisieren
+
+
 @sio.event
 def connect(sid, environ):
     logging.info('Client connected: %s', sid)
@@ -213,9 +215,9 @@ def start(sid, data):
         return
 
     if race_type == "laps" and max_laps is not None:
-        race = RMS(cu= ControlUnit('D2:B9:57:15:EE:AC'),max_laps=max_laps)
+        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'), max_laps=max_laps)
     elif race_type == "time" and max_time is not None:
-        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'),max_time=max_time)
+        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'), max_time=max_time)
     else:
         sio.emit("start_error", "Invalid parameters", to=sid)
         return
