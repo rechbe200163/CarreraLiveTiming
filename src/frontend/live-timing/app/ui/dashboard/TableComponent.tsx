@@ -124,17 +124,31 @@ export default function TableComponent({ type }: TableComponentProps) {
 
   return (
     <div className="w-full font-normal antialiased">
-      <Table className="text-centerr">
+      <Table className="text-center">
         <TableCaption>Live Daten aus dem Rennen</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-center">Position</TableHead>
-            <TableHead className="text-center">Auto</TableHead>
-            <TableHead className="text-center">Letzte Runde</TableHead>
-            <TableHead className="text-center">Beste Runde</TableHead>
-            <TableHead className=" text-center">Runden</TableHead>
-            <TableHead className="text-center">Tankinhalt</TableHead>
-            <TableHead className="text-center">Pits</TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              P
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Auto
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Letzte Runde
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Beste Runde
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Runden
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Tankinhalt
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium">
+              Pits
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
