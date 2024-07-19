@@ -23,9 +23,12 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
       <TableCell
         className={cn("p-2 text-center -skew-x-6 ", {
           "bg-green-500": data.num === 1,
-          "bg-blue-600": data.num === 4,
+          "bg-black": data.num === 2,
           "bg-red-600": data.num === 3,
+          "bg-blue-600": data.num === 4,
           "bg-yellow-400": data.num === 5,
+          "bg-purple-600": data.num === 6,
+          "bg-indigo-600": data.num === 7,
         })}
       >
         <span className="skew-x-6 inline-block">{data.num}</span>
