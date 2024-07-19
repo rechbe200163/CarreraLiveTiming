@@ -15,7 +15,7 @@ const DirverDisplayingComponent = ({ data }: DirverComponentProps) => {
   }
 
   return (
-    <tr className="bg-gray-800 text-white text-2xl">
+    <tr className="bg-gray-800 text-white text-3xl">
       <TableCell className={cn("p-2 w-10 text-center")}>{data.num}</TableCell>
       <TableCell
         className={cn("p-2  text-center", {
