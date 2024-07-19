@@ -40,7 +40,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
       </TableCell>
       <TableCell
         className={cn(
-          "p-2 text-center -skew-x-6 transition-colors duration-1000 ",
+          "p-2 text-center -skew-x-6 transition-colors duration-1000",
           {
             "bg-green-500": data.has_fastest_lap,
           }
