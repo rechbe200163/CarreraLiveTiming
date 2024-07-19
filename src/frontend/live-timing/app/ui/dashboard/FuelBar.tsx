@@ -7,8 +7,8 @@ type FuelStatusBarProps = {
 
 export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
   return (
-    <>
-      <div className="w-24 bg-gray-700 h-4 rounded-full overflow-hidden">
+    <div className="flex flex-row items-center justify-center px-2 ">
+      <div className="w-full bg-gray-700 h-4 rounded-full overflow-hidden my-6">
         <div
           className={cn("h-full items-center justify-center text-white", {
             "bg-red-500": fuelLevel < 20,
@@ -19,6 +19,6 @@ export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
         ></div>
       </div>
       <div className="ml-2">{fuelLevel}%</div>
-    </>
+    </div>
   );
 }

@@ -129,16 +129,20 @@ export default function TableComponent({ type }: TableComponentProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="text-center">Position</TableHead>
-            <TableHead className="text-center">Car</TableHead>
-            <TableHead className="text-center">Last Lap</TableHead>
-            <TableHead className="text-center">Best Lap</TableHead>
-            <TableHead className=" text-center">Laps</TableHead>
-            <TableHead className="text-center">Fuel Level</TableHead>
+            <TableHead className="text-center">Auto</TableHead>
+            <TableHead className="text-center">Letzte Runde</TableHead>
+            <TableHead className="text-center">Beste Runde</TableHead>
+            <TableHead className=" text-center">Runden</TableHead>
+            <TableHead className="text-center">Tankinhalt</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {raceData.map((car: RaceData) => (
-            <DirverDisplayingComponent key={car.num} data={car} />
+            <DirverDisplayingComponent
+              key={car.num}
+              data={car}
+              index={raceData.indexOf(car)}
+            />
           ))}
         </TableBody>
       </Table>

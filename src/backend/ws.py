@@ -28,7 +28,7 @@ class RaceSimulation:
             self.pit = False
             self.has_fastest_lap = False
 
-    def __init__(self, num_drivers=2, max_laps=None, max_time=None):
+    def __init__(self, num_drivers=5, max_laps=None, max_time=None):
         self.drivers = [self.Driver(num) for num in range(1, num_drivers + 1)]
         self.max_laps = max_laps
         self.max_time = max_time
