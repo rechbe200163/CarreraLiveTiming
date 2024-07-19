@@ -18,7 +18,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
   return (
     <tr className="bg-gray-800 text-white text-3xl">
       <TableCell className={cn("p-2 w-10 text-center -skew-x-6 ")}>
-        <span className="skew-x-6 inline-block">{index + 1}</span>
+        <span className="-skew-x-6 inline-block">{index + 1}</span>
       </TableCell>
       <TableCell
         className={cn("p-2 text-center -skew-x-6 ", {
@@ -54,7 +54,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
         <span className="skew-x-6 inline-block">{data.laps}</span>
       </TableCell>
       <TableCell className="-skew-x-6 ">
-        <div className="skew-x-6">
+        <div>
           <FuelStatusBar fuelLevel={data.fuel} />
         </div>
       </TableCell>
