@@ -58,6 +58,9 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
           <FuelStatusBar fuelLevel={data.fuel} />
         </div>
       </TableCell>
+      <TableCell className={cn("p-2 text-center -skew-x-6 ")}>
+        <span className="skew-x-6 inline-block">{data.pits}</span>
+      </TableCell>
     </tr>
   );
 };

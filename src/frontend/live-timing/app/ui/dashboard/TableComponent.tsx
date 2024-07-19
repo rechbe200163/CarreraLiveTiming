@@ -134,6 +134,7 @@ export default function TableComponent({ type }: TableComponentProps) {
             <TableHead className="text-center">Beste Runde</TableHead>
             <TableHead className=" text-center">Runden</TableHead>
             <TableHead className="text-center">Tankinhalt</TableHead>
+            <TableHead className="text-center">Pits</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
