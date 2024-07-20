@@ -123,7 +123,7 @@ export default function TableComponent({ type }: TableComponentProps) {
   }, [toast, type, raceData]); // Include raceData in dependencies to track changes
 
   return (
-    <div className="w-full font-normal antialiased">
+    <div className="w-full font-semibold antialiased ">
       <Table className="text-center">
         <TableCaption>Live Daten aus dem Rennen</TableCaption>
         <TableHeader>

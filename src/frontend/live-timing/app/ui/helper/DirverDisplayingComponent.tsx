@@ -17,14 +17,14 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
   }
 
   return (
-    <tr className="bg-gray-800 text-white text-3xl">
+    <tr className="bg-white text-black text-3xl">
       <TableCell className={cn("p-2 w-10 text-center -skew-x-6")}>
         <span>{index + 1}</span>
       </TableCell>
       <TableCell
         className={cn("p-2 text-center -skew-x-6", {
           "bg-green-500": data.num === 1,
-          "bg-black": data.num === 2,
+          "bg-gray-500": data.num === 2,
           "bg-red-600": data.num === 3,
           "bg-blue-600": data.num === 4,
           "bg-yellow-400": data.num === 5,
