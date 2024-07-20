@@ -21,7 +21,7 @@ export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
           className={cn(
             "absolute inset-0 flex items-center justify-center text-white",
             {
-              "bg-red-500 animate-ping": fuelLevel < 10,
+              "text-red-600 animate-ping": fuelLevel < 10,
             }
           )}
         >
