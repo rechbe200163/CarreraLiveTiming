@@ -17,7 +17,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
   }
 
   return (
-    <tr className="bg-white text-black text-3xl">
+    <tr className="bg-slate-800 text-white text-3xl">
       <TableCell className={cn("p-2 w-10 text-center -skew-x-6")}>
         <span>{index + 1}</span>
       </TableCell>
