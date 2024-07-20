@@ -14,6 +14,7 @@ export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
             "bg-red-500": fuelLevel < 20,
             "bg-yellow-500": fuelLevel >= 20 && fuelLevel < 50,
             "bg-green-500": fuelLevel >= 50,
+            "bg-red-600 animate-pulse": fuelLevel === 0, // Changed to animate-pulse
           })}
           style={{ width: `${fuelLevel}%` }}
         />

@@ -22,7 +22,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
         <span>{index + 1}</span>
       </TableCell>
       <TableCell
-        className={cn("p-2 text-center -skew-x-6", {
+        className={cn("p-2 text-center -skew-x-12", {
           "bg-green-500": data.num === 1,
           "bg-gray-500": data.num === 2,
           "bg-red-600": data.num === 3,
@@ -41,7 +41,7 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
       </TableCell>
       <TableCell
         className={cn(
-          "p-2 text-center -skew-x-6 transition-colors duration-700 ease-in",
+          "p-2 text-center -skew-x-12 transition-colors duration-700 ease-in",
           {
             "bg-purple-600": data.has_fastest_lap,
           }
