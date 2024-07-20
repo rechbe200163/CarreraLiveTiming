@@ -86,18 +86,18 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Status):
                     self.handle_status(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep(0)  # Add delay between updates
+                    eventlet.sleep(0.5)  # Add delay between updates
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
-                    eventlet.sleep(0)  # Add delay between updates
+                    eventlet.sleep(0.5)  # Add delay between updates
                 else:
                     logging.warning("Unknown data from CU: " + str(data))
                 last = data
 
                 if self.max_time and (time.time() - self.start_time) >= self.max_time:
                     sio.emit("session_over", skip_sid=True)
-                    eventlet.sleep(0)
+                    eventlet.sleep(0.5)
                     self.stop()
                     return
             except IOError as e:
