@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import Image from "next/image";
+import SideNav from "./ui/dashboard/SideNav";
+import { roboto } from "./ui/fonts";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <main className={inter.className}>{children}</main>
+        <main className={`${roboto.className} antialiased`}>{children}</main>
         <Toaster />
       </body>
     </html>

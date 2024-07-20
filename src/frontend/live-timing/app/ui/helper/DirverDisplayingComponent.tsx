@@ -4,6 +4,7 @@ import React from "react";
 import FuelStatusBar from "../dashboard/FuelBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell } from "@/components/ui/table";
+import BigFuelComponent from "../dashboard/BigFuelComponent";
 
 type DriverComponentProps = {
   data: RaceData | null;
@@ -16,14 +17,14 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
   }
 
   return (
-    <tr className="bg-gray-800 text-white text-3xl">
+    <tr className="bg-slate-800 text-white text-3xl">
       <TableCell className={cn("p-2 w-10 text-center -skew-x-6")}>
         <span>{index + 1}</span>
       </TableCell>
       <TableCell
         className={cn("p-2 text-center -skew-x-6", {
           "bg-green-500": data.num === 1,
-          "bg-black": data.num === 2,
+          "bg-gray-500": data.num === 2,
           "bg-red-600": data.num === 3,
           "bg-blue-600": data.num === 4,
           "bg-yellow-400": data.num === 5,
@@ -55,7 +56,8 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
       </TableCell>
       <TableCell className="-skew-x-6 ">
         <div>
-          <FuelStatusBar fuelLevel={data.fuel} />
+          {/* <FuelStatusBar fuelLevel={data.fuel} /> */}
+          <BigFuelComponent fuelLevel={data.fuel} />
         </div>
       </TableCell>
       <TableCell className={cn("p-2 text-center -skew-x-6 ")}>

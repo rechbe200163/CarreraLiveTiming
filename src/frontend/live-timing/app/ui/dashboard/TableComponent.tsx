@@ -123,7 +123,7 @@ export default function TableComponent({ type }: TableComponentProps) {
   }, [toast, type, raceData]); // Include raceData in dependencies to track changes
 
   return (
-    <div className="w-full font-normal antialiased">
+    <div className="w-full font-semibold antialiased pt-5">
       <Table className="text-center">
         <TableCaption>Live Daten aus dem Rennen</TableCaption>
         <TableHeader>
@@ -131,22 +131,22 @@ export default function TableComponent({ type }: TableComponentProps) {
             <TableHead className="text-center text-black text-xl font-medium">
               P
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-1">
               Auto
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-5">
               Letzte Runde
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-5">
               Beste Runde
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-4">
               Runden
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-10">
               Tankinhalt
             </TableHead>
-            <TableHead className="text-center text-black text-xl font-medium">
+            <TableHead className="text-center text-black text-xl font-medium w-5">
               Pits
             </TableHead>
           </TableRow>
