@@ -14,11 +14,17 @@ export default function FuelStatusBar({ fuelLevel }: FuelStatusBarProps) {
             "bg-red-500": fuelLevel < 20,
             "bg-yellow-500": fuelLevel >= 20 && fuelLevel < 50,
             "bg-green-500": fuelLevel >= 50,
-            "bg-red-600 animate-pulse": fuelLevel === 0, // Changed to animate-pulse
           })}
           style={{ width: `${fuelLevel}%` }}
         />
-        <div className="absolute inset-0 flex items-center justify-center text-white">
+        <div
+          className={cn(
+            "absolute inset-0 flex items-center justify-center text-white",
+            {
+              "bg-red-500 animate-ping": fuelLevel < 10,
+            }
+          )}
+        >
           {fuelLevel}%
         </div>
       </div>
