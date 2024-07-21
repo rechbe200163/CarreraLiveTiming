@@ -104,22 +104,28 @@ class RMS(object):
     def handle_timer(self, timer: ControlUnit.Timer):
         driver = self.drivers[timer.address]
 
-        if timer.sector == 1:
-            driver.sector1 = timer.timestamp
-        elif timer.sector == 2:
-            driver.sector2 = timer.timestamp
+        if driver.laps >= 1:
+            if timer.sector == 1:
+                driver.sector2 = timer.timestamp
 
-        if driver.sector1 is not None and driver.sector2 is not None:
-            # Berechnung der Rundenzeit: sector2 - sector1
-            driver.laptime = driver.sector2 - driver.sector1
+            if timer.sector == 2:
+                driver.sector1 = timer.timestamp
+
+            driver.laptime = driver.sector2 + driver.sector1
+            
             if driver.bestlap is None or driver.laptime < driver.bestlap:
                 driver.bestlap = driver.laptime
-            driver.laps += 1
+                
+        driver.time = timer.timestamp
+
+        print(f"Driver Data: {driver.__dict__}")
+
+        if timer.sector == 1:
+            driver.newlap(timer)
 
         if self.maxlaps < driver.laps:
             self.maxlaps = driver.laps
             self.cu.setlap(self.maxlaps % 250)
-
         if self.start is None:
             self.start = timer.timestamp
 
