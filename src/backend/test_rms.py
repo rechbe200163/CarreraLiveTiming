@@ -1,21 +1,17 @@
 import errno
-import select
 import time
+import eventlet
+import socketio
 from flask import Flask, jsonify, render_template
 from flask_socketio import SocketIO, emit
 from carreralib import ControlUnit
-import eventlet
-import socketio
 
 # Configure logging
-
 sio = socketio.Server(cors_allowed_origins='*')
 app = socketio.WSGIApp(sio)
 
-
 def posgetter(driver):
     return (-driver.laps, driver.time)
-
 
 class RMS(object):
     # CU reports zero fuel for all cars unless pit lane adapter is connected
@@ -27,8 +23,8 @@ class RMS(object):
             self.time = None
             self.laptime = None
             self.bestlap = None
-            sector1 = None
-            sector2 = None
+            self.sector1 = None
+            self.sector2 = None
             self.laps = 0
             self.pits = 0
             self.fuel = 0
@@ -64,6 +60,7 @@ class RMS(object):
         self.running = True
         self.start_time = time.time()
         last = None
+        print(f"in Run Method: {self.running}")
         while self.running:
             try:
                 data = self.cu.poll()
@@ -76,9 +73,10 @@ class RMS(object):
                 elif isinstance(data, ControlUnit.Timer):
                     self.handle_timer(data)
                     sio.emit('update', self.update())
+                    print(f"Update: {self.update()}")
                     eventlet.sleep(0.5)  # Add delay between updates
                 else:
-                    print("Unknown data from CU: " + str(data))
+                    print(f"Unknown data from CU: {data}")
                 last = data
 
                 if self.max_time and (time.time() - self.start_time) >= self.max_time:
@@ -104,31 +102,34 @@ class RMS(object):
     def handle_timer(self, timer: ControlUnit.Timer):
         driver = self.drivers[timer.address]
 
-        if driver.laps >= 1:
-            if timer.sector == 1:
-                driver.sector2 = timer.timestamp
-
-            if timer.sector == 2:
-                driver.sector1 = timer.timestamp
-
-            driver.laptime = driver.sector2 + driver.sector1
-            
-            if driver.bestlap is None or driver.laptime < driver.bestlap:
-                driver.bestlap = driver.laptime
-                
-        driver.time = timer.timestamp
-
-        print(f"Driver Data: {driver.__dict__}")
-
         if timer.sector == 1:
-            driver.newlap(timer)
+            if driver.time is not None:
+                driver.laptime = timer.timestamp - driver.time
+                driver.sector1 = driver.laptime - (driver.sector2 if driver.sector2 is not None else 0)
+                print(f"Driver {driver.num} Sector 1: {driver.sector1}")
 
+                if driver.bestlap is None or driver.laptime < driver.bestlap:
+                    driver.bestlap = driver.laptime
+                driver.newlap(timer)
+                print(f"Driver {driver.num} Laptime: {driver.laptime}")
+
+            driver.time = timer.timestamp
+        
+        elif timer.sector == 2:
+            if driver.time is not None:
+                driver.sector2 = timer.timestamp - driver.time
+                print(f"Driver {driver.num} Sector 2: {driver.sector2}")
+
+        # Update maximum laps
         if self.maxlaps < driver.laps:
             self.maxlaps = driver.laps
             self.cu.setlap(self.maxlaps % 250)
+        
         if self.start is None:
             self.start = timer.timestamp
 
+
+        # End race if maximum laps reached
         if self.max_laps and driver.laps >= self.max_laps:
             sio.emit("session_over", skip_sid=True)
             self.stop()
@@ -201,31 +202,15 @@ def stop(sid, data=None):
         sio.emit("stop_error", "No active session to stop", to=sid)
 
 
-@sio.event
-def start(sid, data):
+def start_race():
     global race
-    print("Data", data)
-    # data format: {'race_type': 'laps', 'max_laps': 1, 'max_time': None}
-    race_type = data.get('race_type')
-    max_laps = data.get('max_laps')
-    max_time = data.get('max_time')
+    race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'), max_laps=250)
+    print("Starting")
 
-    if race:
-        sio.emit("start_error", "A session is already running", to=sid)
-        return
-
-    if race_type == "laps" and max_laps is not None:
-        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'), max_laps=max_laps)
-    elif race_type == "time" and max_time is not None:
-        race = RMS(cu=ControlUnit('D2:B9:57:15:EE:AC'), max_time=max_time)
-    else:
-        sio.emit("start_error", "Invalid parameters", to=sid)
-        return
-
+    race.run()
     # Start the simulation
-    eventlet.spawn(race.run)
-    sio.emit("start_success", "Started session successfully", to=sid)
 
 
 if __name__ == '__main__':
+    start_race()
     eventlet.wsgi.server(eventlet.listen(('', 8765)), app)
