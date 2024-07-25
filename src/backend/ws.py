@@ -22,13 +22,15 @@ class RaceSimulation:
             self.time = None
             self.laptime = None
             self.bestlap = None
+            self.sector1 = None
+            self.sector2 = None
             self.laps = 0
             self.pits = 0
             self.fuel = 100
             self.pit = False
             self.has_fastest_lap = False
 
-    def __init__(self, num_drivers=7, max_laps=None, max_time=None):
+    def __init__(self, num_drivers=1, max_laps=None, max_time=None):
         self.drivers = [self.Driver(num) for num in range(1, num_drivers + 1)]
         self.max_laps = max_laps
         self.max_time = max_time
@@ -59,9 +61,11 @@ class RaceSimulation:
         while self.running:
             for driver in self.drivers:
                 driver.time = int(time.time() * 1000)
-                driver.laptime = int(random.uniform(7.4, 20.0) * 1000)
+                driver.laptime = int(random.uniform(7.1, 11.7) * 1000)
                 driver.bestlap = min(
                     driver.bestlap or driver.laptime, driver.laptime)
+                driver.sector1 = int(random.uniform(2.0, 5.0) * 1000)
+                driver.sector2 = driver.laptime - driver.sector1
                 driver.laps += 1
                 driver.fuel -= 12
                 driver.pit = driver.fuel <= 5
@@ -89,6 +93,8 @@ class RaceSimulation:
             driver.time = None
             driver.laptime = None
             driver.bestlap = None
+            driver.sector1 = None
+            driver.sector2 = None
             driver.laps = 0
             driver.pits = 0
             driver.fuel = 100
