@@ -11,7 +11,7 @@ import { connectToSocket } from "@/lib/utils";
 export default async function LiveTimingData({
   params,
 }: {
-  params: { type: string };
+  params: { raceId: string; type: string };
 }) {
   const socket = connectToSocket("http://localhost:8765");
 
@@ -22,12 +22,14 @@ export default async function LiveTimingData({
 
   return (
     <>
+      {params.raceId}
+      {params.type}
       <div className="py-5 flex flex-row justify-between">
         <Breadcrumbs
           breadcrumbs={[
             { label: "Home", href: "/" },
-            { label: "Live Daten", href: "/live-timing/" },
-            { label: params.type.toLocaleUpperCase(), href: "#" },
+            { label: "Wettkampf", href: "/races/" },
+            { label: params.type.toUpperCase(), href: "#" },
           ]}
         />
         <ButtonComponent label="Stop Race" method={onClick} />
@@ -45,7 +47,7 @@ export default async function LiveTimingData({
         <div className="flex flex-row items-center justify-between">
           <InteractingComponent action="start" />
         </div>
-        <TableComponent type={params.type} />
+        <TableComponent type={params.type} raceId={params.raceId} />
       </div>
     </>
   );

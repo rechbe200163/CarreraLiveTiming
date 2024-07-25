@@ -7,25 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model RaceDB {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt   DateTime @default(now())
-  podium      Podium[]
+model RaceData {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  num   Int?
+  laptime  Float
+  sector1  Float
+  sector2  Float
+  race     Competition     @relation(fields: [raceId], references: [id])
+  raceId   String   @db.ObjectId
 }
 
-model Podium {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId
-  num           Int
-  bestLap       Int
-  time          Int
-  laps          Int
-  has_fastest_lap Boolean
-  race          RaceDB   @relation(fields: [raceId], references: [id])
-  raceId        String   @db.ObjectId @map("raceId")
-}
-
-model Controller {
-  id            String  @id @default(auto()) @map("_id") @db.ObjectId
-  num           Int     @unique
-  color         String
+model Competition {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  createdAt DateTime     @default(now())
+  title     String
+  raceData  RaceData[]
 }

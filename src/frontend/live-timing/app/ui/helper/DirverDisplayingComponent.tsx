@@ -51,6 +51,12 @@ const DriverDisplayingComponent = ({ data, index }: DriverComponentProps) => {
           {formatTime(data.bestlap, "laptime")}
         </span>
       </TableCell>
+      <TableCell className={cn("p-2 text-center -skew-x-6 ")}>
+        <span className="skew-x-6 inline-block">S1</span>
+      </TableCell>
+      <TableCell>
+        <span className="skew-x-6 inline-block">S2</span>
+      </TableCell>
       <TableCell className={cn("p-2 w-10 text-center -skew-x-6 ")}>
         <span className="skew-x-6 inline-block">{data.laps}</span>
       </TableCell>

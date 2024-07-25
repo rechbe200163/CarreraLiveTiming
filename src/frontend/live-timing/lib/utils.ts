@@ -51,3 +51,13 @@ export function connectToSocket(url: string) {
     transports: ["websocket", "polling"],
   });
 }
+
+export function formatCreatedAt(createdAt: string) {
+  return new Date(createdAt).toLocaleDateString("de-at", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

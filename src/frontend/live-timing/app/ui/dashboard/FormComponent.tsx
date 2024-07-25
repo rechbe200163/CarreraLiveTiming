@@ -157,7 +157,7 @@ export default function FormComponent() {
                   render={({ field }) => (
                     <FormItem>
                       <Slider
-                        defaultValue={[1]}
+                        defaultValue={[3]}
                         max={250}
                         min={3}
                         step={1}
@@ -179,7 +179,7 @@ export default function FormComponent() {
                   render={({ field }) => (
                     <FormItem>
                       <Slider
-                        defaultValue={[5]}
+                        defaultValue={[15]}
                         max={30}
                         min={1}
                         step={1}

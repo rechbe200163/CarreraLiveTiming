@@ -3,32 +3,28 @@ import {
   Table,
   TableBody,
   TableCaption,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import RacingDataSkeleton from "./RacingDataSkeleton";
 import { useToast } from "@/components/ui/use-toast";
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect } from "react";
 import { connectToSocket, getFastestLapCars } from "@/lib/utils";
 import { formatTime } from "@/lib/utils";
-import { PodiumData, RaceData } from "@/lib/types";
-import clsx from "clsx";
-import { ToastAction } from "@radix-ui/react-toast";
-import { useRouter } from "next/navigation";
-import FuelStatusBar from "./FuelBar";
+import { RaceData, RaceDataStore } from "@/lib/types";
 import DirverDisplayingComponent from "../helper/DirverDisplayingComponent";
+import { postRaceData } from "@/lib/actions";
+import { ToastAction } from "@radix-ui/react-toast";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface TableComponentProps {
+  raceId: string;
   type: string;
 }
 
-export default function TableComponent({ type }: TableComponentProps) {
+export default function TableComponent({ raceId, type }: TableComponentProps) {
   const [raceData, setRaceData] = useState<RaceData[]>([]);
-  const [raceId, setRaceId] = useState<number>(0);
-
-  const router = useRouter();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -39,14 +35,43 @@ export default function TableComponent({ type }: TableComponentProps) {
       socket.emit("update");
     });
 
+    socket.on("session_over", () => {
+      toast({
+        title: "Rennen beendet",
+        description: "Das Rennen wurde beendet.",
+        variant: "success",
+        action: (
+          <ToastAction altText="Goto schedule to undo">
+            <Link href={`/podium/${raceId}`}>Podium Anzeigen</Link>
+          </ToastAction>
+        ),
+      });
+    });
+
     socket.on("update", (newData: RaceData[]) => {
       console.log("Received update:", newData);
       const processedData = getFastestLapCars(newData);
       setRaceData(processedData);
 
+      const storedData: RaceDataStore[] = newData.map((data) => {
+        return {
+          num: data.num,
+          laptime: data.laptime,
+          sector1: data.sector1,
+          sector2: data.sector2,
+        };
+      });
+
+      console.log("Stored data:", storedData);
+
+      // Post updated race data to the server
+      if (type === "rennen") {
+        postRaceData(storedData, raceId);
+      }
+
       // Check for new fastest lap
       const newFastestLap = Math.min(
-        ...processedData.map((data: RaceData) => data.bestlap || Infinity) // Handle null values
+        ...processedData.map((data) => data.bestlap || Infinity) // Handle null values
       );
       const currentFastestLap = Math.min(
         ...raceData.map((data) => data.bestlap || Infinity) // Handle null values
@@ -80,39 +105,6 @@ export default function TableComponent({ type }: TableComponentProps) {
       });
     });
 
-    socket.on("session_over", async (podiumData: PodiumData[]) => {
-      if (type === "rennen" || type === "qualifying") {
-        try {
-          console.log("Podium data:", podiumData);
-          const response = await fetch("/api/createRacePodium", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ podiumData }),
-          });
-          const data = await response.json();
-          console.log("Podium created:", data.raceId);
-          setRaceId(data.raceId);
-        } catch (error) {
-          console.error("Error creating podium:", error);
-        }
-        toast({
-          title: "Rennen beendet",
-          description: "rennen beendet",
-          variant: "default",
-          action: (
-            <ToastAction
-              altText="Try again"
-              onClick={() => router.push(`/live-timing/podium/${raceId}`)}
-            >
-              Podium ansehen {raceId}
-            </ToastAction>
-          ),
-        });
-      }
-    });
-
     socket.on("disconnect", () => {
       console.log("WebSocket connection closed.");
     });
@@ -139,6 +131,12 @@ export default function TableComponent({ type }: TableComponentProps) {
             </TableHead>
             <TableHead className="text-center text-black text-xl font-medium w-5">
               Beste Runde
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium w-5">
+              S1
+            </TableHead>
+            <TableHead className="text-center text-black text-xl font-medium w-5">
+              S2
             </TableHead>
             <TableHead className="text-center text-black text-xl font-medium w-4">
               Runden

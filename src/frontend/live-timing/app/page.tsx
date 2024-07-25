@@ -13,7 +13,7 @@ export default function Home() {
         Start Live Timing
       </span>
       <div className="flex flex-col w-1/2 md:flex-row md:w-fit justify-center gap-4">
-        <Link href="/live-timing/rennen/data">
+        <Link href="/races">
           <Button
             size="lg"
             color="primary"
